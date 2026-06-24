@@ -14,3 +14,14 @@ export type ResumeAnalysis = {
     suggestedKeywords: string[]
   }
   
+  export type ApplicationStatus = 'Saved' | 'Applied' | 'OA' | 'Interview' | 'Offer' | 'Rejected'
+
+  export type Application = {
+    id: string
+    company: string
+    role: string
+    status: ApplicationStatus
+    appliedDate: string
+    matchLevel?: MatchLevel
+    notes: string
+  }
