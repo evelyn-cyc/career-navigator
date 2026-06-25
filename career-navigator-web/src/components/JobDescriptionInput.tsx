@@ -22,13 +22,19 @@ function JobDescriptionInput() {
 
   return (
     <div className="p-6 bg-slate-800 rounded-lg mt-4">
-      <h2 className="text-xl font-bold text-white mb-3">2. Paste a job description</h2>
+      <h2 className="text-xl font-bold text-white mb-3">
+        2. Paste a job description
+      </h2>
       <textarea
         value={jobText}
         onChange={(e) => setJobText(e.target.value)}
         disabled={isDisabled}
         rows={6}
-        placeholder={isDisabled ? 'Upload your resume first' : 'Paste the job description here...'}
+        placeholder={
+          isDisabled
+            ? 'Upload your resume first'
+            : 'Paste the job description here...'
+        }
         className="w-full p-3 rounded bg-slate-700 text-white disabled:opacity-50"
       />
       <button

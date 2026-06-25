@@ -12,7 +12,10 @@ function ResumeAnalysisView() {
       <p className="text-slate-400 mb-1">Skills</p>
       <div className="flex flex-wrap gap-2 mb-4">
         {resumeAnalysis.extractedSkills.map((skill) => (
-          <span key={skill} className="px-3 py-1 bg-blue-600 text-white text-sm rounded-full">
+          <span
+            key={skill}
+            className="px-3 py-1 bg-blue-600 text-white text-sm rounded-full"
+          >
             {skill}
           </span>
         ))}

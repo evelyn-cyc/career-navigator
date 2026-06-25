@@ -15,7 +15,11 @@ type ApplicationListProps = {
   onDelete: (id: string) => void
 }
 
-function ApplicationList({ applications, onUpdateStatus, onDelete }: ApplicationListProps) {
+function ApplicationList({
+  applications,
+  onUpdateStatus,
+  onDelete,
+}: ApplicationListProps) {
   if (applications.length === 0) {
     return <p className="text-slate-400 mt-4">No applications tracked yet.</p>
   }
@@ -23,19 +27,28 @@ function ApplicationList({ applications, onUpdateStatus, onDelete }: Application
   return (
     <div className="mt-4 space-y-3">
       {applications.map((app) => (
-        <div key={app.id} className="p-4 bg-slate-800 rounded-lg flex justify-between items-start">
+        <div
+          key={app.id}
+          className="p-4 bg-slate-800 rounded-lg flex justify-between items-start"
+        >
           <div>
-            <p className="text-white font-bold">{app.role} @ {app.company}</p>
+            <p className="text-white font-bold">
+              {app.role} @ {app.company}
+            </p>
             <p className="text-slate-400 text-sm">{app.appliedDate}</p>
             {app.matchLevel && (
               <p className="text-slate-400 text-sm">Match: {app.matchLevel}</p>
             )}
-            {app.notes && <p className="text-slate-300 text-sm mt-1">{app.notes}</p>}
+            {app.notes && (
+              <p className="text-slate-300 text-sm mt-1">{app.notes}</p>
+            )}
           </div>
           <div className="flex flex-col items-end gap-2">
             <select
               value={app.status}
-              onChange={(e) => onUpdateStatus(app.id, e.target.value as ApplicationStatus)}
+              onChange={(e) =>
+                onUpdateStatus(app.id, e.target.value as ApplicationStatus)
+              }
               className={`px-2 py-1 rounded text-white text-sm ${statusColors[app.status]}`}
             >
               <option value="Saved">Saved</option>

@@ -19,7 +19,9 @@ function ResumeUpload() {
 
   return (
     <div className="p-6 bg-slate-800 rounded-lg">
-      <h2 className="text-xl font-bold text-white mb-3">1. Upload your resume</h2>
+      <h2 className="text-xl font-bold text-white mb-3">
+        1. Upload your resume
+      </h2>
       <input
         type="file"
         accept=".pdf"

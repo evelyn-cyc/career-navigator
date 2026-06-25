@@ -14,7 +14,8 @@ function loadApplications(): Application[] {
 }
 
 export function useApplications() {
-  const [applications, setApplications] = useState<Application[]>(loadApplications)
+  const [applications, setApplications] =
+    useState<Application[]>(loadApplications)
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(applications))
@@ -27,7 +28,7 @@ export function useApplications() {
 
   const updateStatus = (id: string, status: ApplicationStatus) => {
     setApplications((prev) =>
-      prev.map((app) => (app.id === id ? { ...app, status } : app))
+      prev.map((app) => (app.id === id ? { ...app, status } : app)),
     )
   }
 

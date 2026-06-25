@@ -27,7 +27,10 @@ function JobMatchResultView() {
       <p className="text-slate-400 mb-1">Matched Skills</p>
       <div className="flex flex-wrap gap-2 mb-4">
         {jobMatchResult.matchedSkills.map((skill) => (
-          <span key={skill} className="px-3 py-1 bg-green-700 text-white text-sm rounded-full">
+          <span
+            key={skill}
+            className="px-3 py-1 bg-green-700 text-white text-sm rounded-full"
+          >
             {skill}
           </span>
         ))}
@@ -36,7 +39,10 @@ function JobMatchResultView() {
       <p className="text-slate-400 mb-1">Missing Skills</p>
       <div className="flex flex-wrap gap-2 mb-4">
         {jobMatchResult.missingSkills.map((skill) => (
-          <span key={skill} className="px-3 py-1 bg-red-700 text-white text-sm rounded-full">
+          <span
+            key={skill}
+            className="px-3 py-1 bg-red-700 text-white text-sm rounded-full"
+          >
             {skill}
           </span>
         ))}
