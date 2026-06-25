@@ -5,6 +5,7 @@ import JobMatchResultView from './components/JobMatchResultView'
 import ApplicationForm from './components/ApplicationForm'
 import ApplicationList from './components/ApplicationList'
 import { useApplications } from './hooks/useApplications'
+import Dashboard from './components/Dashboard'
 
 function App() {
   const { applications, addApplication, updateStatus, deleteApplication } =
@@ -26,6 +27,7 @@ function App() {
           onUpdateStatus={updateStatus}
           onDelete={deleteApplication}
         />
+        <Dashboard applications={applications} />
       </div>
     </div>
   )
