@@ -34,20 +34,32 @@ function ApplicationForm({ onAdd }: ApplicationFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="p-6 bg-slate-800 rounded-lg mt-4">
-      <h2 className="text-xl font-bold text-white mb-3">3. Track an application</h2>
+      <h2 className="text-xl font-bold text-white mb-3">
+        3. Track an application
+      </h2>
       <div className="grid grid-cols-2 gap-3 mb-3">
-        <input
-          value={company}
-          onChange={(e) => setCompany(e.target.value)}
-          placeholder="Company"
-          className="p-2 rounded bg-slate-700 text-white"
-        />
-        <input
-          value={role}
-          onChange={(e) => setRole(e.target.value)}
-          placeholder="Role"
-          className="p-2 rounded bg-slate-700 text-white"
-        />
+        <div>
+          <label className="block text-slate-400 text-sm mb-1">
+            Company <span className="text-red-500">*</span>
+          </label>
+          <input
+            value={company}
+            onChange={(e) => setCompany(e.target.value)}
+            placeholder="Company"
+            className="w-full p-2 rounded bg-slate-700 text-white"
+          />
+        </div>
+        <div>
+          <label className="block text-slate-400 text-sm mb-1">
+            Role <span className="text-red-500">*</span>
+          </label>
+          <input
+            value={role}
+            onChange={(e) => setRole(e.target.value)}
+            placeholder="Role"
+            className="w-full p-2 rounded bg-slate-700 text-white"
+          />
+        </div>
       </div>
       <select
         value={status}
@@ -68,7 +80,10 @@ function ApplicationForm({ onAdd }: ApplicationFormProps) {
         rows={2}
         className="w-full p-2 rounded bg-slate-700 text-white mb-3"
       />
-      <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded">
+      <button
+        type="submit"
+        className="px-4 py-2 bg-blue-600 text-white rounded"
+      >
         Add Application
       </button>
     </form>
