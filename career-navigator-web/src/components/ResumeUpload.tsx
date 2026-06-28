@@ -18,17 +18,17 @@ function ResumeUpload() {
   }
 
   return (
-    <div className="p-6 bg-slate-800 rounded-lg">
-      <h2 className="text-xl font-bold text-white mb-3">
+    <div className="p-6 bg-white border border-slate-200 rounded-xl shadow-sm">
+      <h2 className="text-base font-bold text-slate-900 mb-3">
         1. Upload your resume
       </h2>
       <input
         type="file"
         accept=".pdf"
         onChange={handleFileChange}
-        className="text-white"
+        className="text-slate-700"
       />
-      {isAnalyzing && <p className="text-slate-400 mt-3">Analyzing...</p>}
+      {isAnalyzing && <p className="text-slate-500 mt-3">Analyzing...</p>}
     </div>
   )
 }

@@ -21,8 +21,8 @@ function JobDescriptionInput() {
   const isDisabled = !resumeAnalysis
 
   return (
-    <div className="p-6 bg-slate-800 rounded-lg mt-4">
-      <h2 className="text-xl font-bold text-white mb-3">
+    <div className="p-6 bg-white border border-slate-200 rounded-xl shadow-sm">
+      <h2 className="text-base font-bold text-slate-900 mb-3">
         2. Paste a job description
       </h2>
       <textarea
@@ -35,16 +35,16 @@ function JobDescriptionInput() {
             ? 'Upload your resume first'
             : 'Paste the job description here...'
         }
-        className="w-full p-3 rounded bg-slate-700 text-white disabled:opacity-50"
+        className="w-full p-3 rounded-lg border border-slate-200 bg-slate-50 text-slate-900 disabled:opacity-50"
       />
       <button
         onClick={handleSubmit}
         disabled={isDisabled}
-        className="mt-3 px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed"
+        className="mt-3 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         Match
       </button>
-      {isMatching && <p className="text-slate-400 mt-3">Matching...</p>}
+      {isMatching && <p className="text-slate-500 mt-3">Matching...</p>}
     </div>
   )
 }

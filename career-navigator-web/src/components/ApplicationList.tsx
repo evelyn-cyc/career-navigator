@@ -1,12 +1,12 @@
 import type { Application, ApplicationStatus } from '../types'
 
 const statusColors: Record<ApplicationStatus, string> = {
-  Saved: 'bg-slate-600',
-  Applied: 'bg-blue-600',
-  OA: 'bg-purple-600',
-  Interview: 'bg-yellow-600',
-  Offer: 'bg-green-600',
-  Rejected: 'bg-red-600',
+  Saved: 'bg-slate-100 text-slate-700 border-slate-200',
+  Applied: 'bg-blue-100 text-blue-700 border-blue-200',
+  OA: 'bg-violet-100 text-violet-700 border-violet-200',
+  Interview: 'bg-amber-100 text-amber-700 border-amber-200',
+  Offer: 'bg-green-100 text-green-700 border-green-200',
+  Rejected: 'bg-red-100 text-red-700 border-red-200',
 }
 
 type ApplicationListProps = {
@@ -21,7 +21,7 @@ function ApplicationList({
   onDelete,
 }: ApplicationListProps) {
   if (applications.length === 0) {
-    return <p className="text-slate-400 mt-4">No applications tracked yet.</p>
+    return <p className="text-slate-500 mt-4">No applications tracked yet.</p>
   }
 
   return (
@@ -29,18 +29,18 @@ function ApplicationList({
       {applications.map((app) => (
         <div
           key={app.id}
-          className="p-4 bg-slate-800 rounded-lg flex justify-between items-start"
+          className="p-4 bg-white border border-slate-200 rounded-xl shadow-sm flex justify-between items-start"
         >
           <div>
-            <p className="text-white font-bold">
+            <p className="text-slate-900 font-bold">
               {app.role} @ {app.company}
             </p>
-            <p className="text-slate-400 text-sm">{app.appliedDate}</p>
+            <p className="text-slate-500 text-sm">{app.appliedDate}</p>
             {app.matchLevel && (
-              <p className="text-slate-400 text-sm">Match: {app.matchLevel}</p>
+              <p className="text-slate-500 text-sm">Match: {app.matchLevel}</p>
             )}
             {app.notes && (
-              <p className="text-slate-300 text-sm mt-1">{app.notes}</p>
+              <p className="text-slate-600 text-sm mt-1">{app.notes}</p>
             )}
           </div>
           <div className="flex flex-col items-end gap-2">
@@ -49,7 +49,7 @@ function ApplicationList({
               onChange={(e) =>
                 onUpdateStatus(app.id, e.target.value as ApplicationStatus)
               }
-              className={`px-2 py-1 rounded text-white text-sm ${statusColors[app.status]}`}
+              className={`px-2 py-1 rounded-full border text-sm font-semibold ${statusColors[app.status]}`}
             >
               <option value="Saved">Saved</option>
               <option value="Applied">Applied</option>
@@ -60,7 +60,7 @@ function ApplicationList({
             </select>
             <button
               onClick={() => onDelete(app.id)}
-              className="text-red-400 text-sm hover:text-red-300"
+              className="text-red-600 text-sm font-semibold hover:text-red-700"
             >
               Delete
             </button>

@@ -6,30 +6,32 @@ function ResumeAnalysisView() {
   if (!resumeAnalysis) return null
 
   return (
-    <div className="p-6 bg-slate-800 rounded-lg mt-4">
-      <h2 className="text-xl font-bold text-white mb-3">Resume Analysis</h2>
+    <div className="p-6 bg-white border border-slate-200 rounded-xl shadow-sm mt-4">
+      <h2 className="text-base font-bold text-slate-900 mb-3">
+        Resume Analysis
+      </h2>
 
-      <p className="text-slate-400 mb-1">Skills</p>
+      <p className="text-sm font-semibold text-slate-500 mb-1">Skills</p>
       <div className="flex flex-wrap gap-2 mb-4">
         {resumeAnalysis.extractedSkills.map((skill) => (
           <span
             key={skill}
-            className="px-3 py-1 bg-blue-600 text-white text-sm rounded-full"
+            className="px-3 py-1 bg-blue-100 text-blue-700 border border-blue-200 text-sm font-semibold rounded-full"
           >
             {skill}
           </span>
         ))}
       </div>
 
-      <p className="text-slate-400 mb-1">Projects</p>
-      <ul className="text-white list-disc list-inside mb-4">
+      <p className="text-sm font-semibold text-slate-500 mb-1">Projects</p>
+      <ul className="text-slate-700 list-disc list-inside mb-4">
         {resumeAnalysis.projects.map((project) => (
           <li key={project}>{project}</li>
         ))}
       </ul>
 
-      <p className="text-slate-400 mb-1">Suggestions</p>
-      <ul className="text-white list-disc list-inside">
+      <p className="text-sm font-semibold text-slate-500 mb-1">Suggestions</p>
+      <ul className="text-slate-700 list-disc list-inside">
         {resumeAnalysis.suggestions.map((suggestion) => (
           <li key={suggestion}>{suggestion}</li>
         ))}
