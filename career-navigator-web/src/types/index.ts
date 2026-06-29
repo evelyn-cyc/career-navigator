@@ -1,4 +1,7 @@
 export type ResumeAnalysis = {
+  id: string
+  name: string
+  uploadedDate: string
   extractedSkills: string[]
   projects: string[]
   experience: string[]
@@ -22,11 +25,10 @@ export type JobPostingDetails = {
   applicationUrl?: string
 }
 
-export type JobMatchResult = JobPostingDetails & {
+export type JobMatchResult = {
   matchLevel: MatchLevel
   matchedSkills: string[]
   missingSkills: string[]
-  suggestedKeywords: string[]
 }
 
 export type JobRequirements = JobPostingDetails & {
@@ -41,14 +43,17 @@ export type ApplicationStatus =
   | 'Offer'
   | 'Rejected'
 
-export type Application = {
+export type Application = JobPostingDetails & {
   id: string
   company: string
   role: string
   status: ApplicationStatus
   appliedDate: string
+  requiredSkills?: string[]
+  matchedResumeId?: string
+  matchedDate?: string
   matchLevel?: MatchLevel
-  contactEmail?: string
-  applicationUrl?: string
+  matchedSkills?: string[]
+  missingSkills?: string[]
   notes: string
 }

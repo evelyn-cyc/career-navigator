@@ -1,16 +1,19 @@
-import { useCareerStore } from '../store/useCareerStore'
 import { useApplications } from '../hooks/useApplications'
 import Dashboard from '../components/Dashboard'
 import MatchGauge from '../components/MatchGauge'
 
 function DashboardPage() {
   const { applications } = useApplications()
-  const jobMatchResult = useCareerStore((state) => state.jobMatchResult)
 
   const interviewingCount = applications.filter(
     (app) => app.status === 'Interview',
   ).length
-  const topSkillGap = jobMatchResult?.missingSkills[0] ?? '—'
+
+  const latestMatchedApp = applications
+    .filter((app) => app.matchLevel && app.matchedDate)
+    .sort((a, b) => (b.matchedDate ?? '').localeCompare(a.matchedDate ?? ''))[0]
+
+  const topSkillGap = latestMatchedApp?.missingSkills?.[0] ?? '—'
 
   return (
     <div>
@@ -48,12 +51,12 @@ function DashboardPage() {
           <p className="text-sm font-semibold text-slate-500 mb-2">
             Latest match
           </p>
-          {jobMatchResult ? (
+          {latestMatchedApp?.matchLevel ? (
             <>
               <p className="text-2xl font-extrabold text-slate-900 capitalize mb-2">
-                {jobMatchResult.matchLevel}
+                {latestMatchedApp.matchLevel}
               </p>
-              <MatchGauge level={jobMatchResult.matchLevel} mini />
+              <MatchGauge level={latestMatchedApp.matchLevel} mini />
             </>
           ) : (
             <p className="text-2xl font-extrabold text-slate-900">—</p>
@@ -77,10 +80,11 @@ function DashboardPage() {
           <h2 className="text-base font-bold text-slate-900 mb-3">
             Latest skill gap
           </h2>
-          {jobMatchResult ? (
+          {latestMatchedApp?.matchedSkills &&
+          latestMatchedApp?.missingSkills ? (
             <>
               <div className="flex flex-wrap gap-2 mb-3">
-                {jobMatchResult.matchedSkills.map((skill) => (
+                {latestMatchedApp.matchedSkills.map((skill) => (
                   <span
                     key={skill}
                     className="px-3 py-1 bg-green-100 text-green-700 border border-green-200 text-sm font-semibold rounded-full"
@@ -90,7 +94,7 @@ function DashboardPage() {
                 ))}
               </div>
               <div className="flex flex-wrap gap-2">
-                {jobMatchResult.missingSkills.map((skill) => (
+                {latestMatchedApp.missingSkills.map((skill) => (
                   <span
                     key={skill}
                     className="px-3 py-1 bg-red-100 text-red-700 border border-red-200 text-sm font-semibold rounded-full"
@@ -102,7 +106,7 @@ function DashboardPage() {
             </>
           ) : (
             <p className="text-slate-500">
-              Run a job match to see your skill gap here.
+              Run a match on a tracked application to see your skill gap here.
             </p>
           )}
         </div>

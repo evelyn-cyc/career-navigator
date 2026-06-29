@@ -42,8 +42,23 @@
 
 **Decision:** Pasting a JD is now always allowed. With no resume uploaded, clicking "Extract Requirements" shows just the JD's required skills (no comparison) via a new `jobRequirements` store field and `mockJobRequirements`. Once a resume exists, the same input becomes "Match" and produces the full `jobMatchResult` (match level + matched/missing skills) as before.
 **Why:** The original resume-first gate assumed everyone builds a resume before reading job postings, but plenty of people read postings first to figure out what to build toward. A "match" inherently needs two sides to compare, so full matching still requires a resume — but extracting a JD's requirements alone doesn't, so there's no real reason to block it.
+**Superseded by:** the entry below — matching moved off this page entirely.
 
 ## Job postings carry structured details, and "Save as Application" now pre-fills them
 
 **Decision:** Added a shared `JobPostingDetails` type (company, role, employment type, location, work arrangement, salary, start/end date, working hours, citizenship/visa requirement, contact email, application link) that both `JobRequirements` and `JobMatchResult` extend. `ApplicationForm` now initializes `company`/`role`/`contactEmail`/`applicationUrl` from the current `jobMatchResult` in the store, so "Save as Application" actually carries that data over instead of requiring it to be retyped. `Application` itself gained `contactEmail`/`applicationUrl` fields, visible and editable via `ApplicationDetailModal`.
 **Why:** This directly resolves the limitation noted above — once the JD extraction produces structured company/role/contact data, there's no reason to make the user retype it. Contact email and application link are rendered as clickable `mailto:`/`http(s):` links rather than plain text since they're meant to be acted on, not just read.
+**Note:** `ApplicationForm` reads from `jobMatchResult` here, which the entry below later removes from the store in favor of `jobRequirements` — the pre-fill source changed accordingly.
+
+## Resume Analysis becomes a resume library; matching moves to Applications; Job Analysis is extraction-only
+
+**Decision:** Split what used to be one tangled page (Job Matcher: extract a JD _and_ match it against a single global resume) into three clean responsibilities:
+
+- **Resume Analysis** is now a library — `useResumes()` (mirrors `useApplications()`'s localStorage pattern) stores multiple named resumes, not one global slot. `ResumeAnalysis` gained `id`/`name`/`uploadedDate`.
+- **Job Analysis** (renamed from "Job Matcher," same `/match` route) is pure extraction now — always "Extract Requirements," no resume involved, no more dual Match/Extract branching. `JobMatchResultView.tsx` was renamed to `JobRequirementsView.tsx` and lost its full-match branch entirely.
+- **Applications** is the management page — matching happens per-application, on demand, against a _selected_ saved resume (`ApplicationDetailModal`'s new "Match against a resume" section). `Application` absorbed the rest of `JobPostingDetails` plus `requiredSkills`, `matchedResumeId`, `matchedDate`, `matchedSkills`, `missingSkills`.
+- `resumeAnalysis` and `jobMatchResult` were removed from the Zustand store entirely (resumes are persisted list data now, not transient shared state; match results live on the specific `Application`, not globally, since each application can have its own independent match).
+
+**Why:** The user pointed out directly that "paste a JD" and "track an application" had converged on the same shape of data — both produce company/role/skills/contact info. Untangling extraction (a JD property) from matching (a comparison that needs _a_ resume, and now _which_ resume) is more honest about what each page actually does, and multiple resumes is a real need once you're tailoring applications to different kinds of roles.
+
+**Bonus — first real (non-mocked) logic:** matching now compares two concrete skill lists — `application.requiredSkills` (from JD extraction) against a selected resume's `extractedSkills` — instead of always returning the same canned `mockJobMatchResult`. `src/utils/matching.ts`'s `computeMatch()` does a real case-insensitive set-overlap with simple ratio thresholds for `matchLevel`. Dropped `suggestedKeywords` from the result entirely — there was no honest computed equivalent for it without real AI, and it was always decorative mock filler.

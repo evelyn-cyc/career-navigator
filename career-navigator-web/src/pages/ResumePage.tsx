@@ -1,7 +1,21 @@
+import { useState } from 'react'
+import { useResumes } from '../hooks/useResumes'
 import ResumeUpload from '../components/ResumeUpload'
-import ResumeAnalysisView from '../components/ResumeAnalysisView'
+import ResumeList from '../components/ResumeList'
+import ResumeDetailModal from '../components/ResumeDetailModal'
+import type { ResumeAnalysis } from '../types'
 
 function ResumePage() {
+  const { resumes, addResume, deleteResume } = useResumes()
+  const [viewingResume, setViewingResume] = useState<ResumeAnalysis | null>(
+    null,
+  )
+
+  const handleDelete = (id: string) => {
+    deleteResume(id)
+    setViewingResume(null)
+  }
+
   return (
     <div>
       <header className="mb-6 pb-5 border-b border-slate-200">
@@ -10,15 +24,23 @@ function ResumePage() {
         </p>
         <h1 className="text-2xl font-bold text-slate-900">Resume Analysis</h1>
         <p className="text-slate-500 mt-2 max-w-xl">
-          Upload your resume to see your detected skills and ways to strengthen
-          it.
+          Upload and manage multiple resumes — pick whichever one fits when
+          matching against a job.
         </p>
       </header>
 
       <div className="grid grid-cols-2 gap-4 items-start">
-        <ResumeUpload />
-        <ResumeAnalysisView />
+        <ResumeUpload onAdd={addResume} />
+        <ResumeList resumes={resumes} onView={setViewingResume} />
       </div>
+
+      {viewingResume && (
+        <ResumeDetailModal
+          resume={viewingResume}
+          onClose={() => setViewingResume(null)}
+          onDelete={handleDelete}
+        />
+      )}
     </div>
   )
 }

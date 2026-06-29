@@ -1,9 +1,12 @@
 import { useState } from 'react'
 import { X } from 'lucide-react'
-import type { Application, ApplicationStatus } from '../types'
+import MatchGauge from './MatchGauge'
+import { computeMatch } from '../utils/matching'
+import type { Application, ApplicationStatus, ResumeAnalysis } from '../types'
 
 type ApplicationDetailModalProps = {
   application: Application
+  resumes: ResumeAnalysis[]
   onClose: () => void
   onUpdate: (id: string, data: Omit<Application, 'id'>) => void
   onDelete: (id: string) => void
@@ -11,6 +14,7 @@ type ApplicationDetailModalProps = {
 
 function ApplicationDetailModal({
   application,
+  resumes,
   onClose,
   onUpdate,
   onDelete,
@@ -26,6 +30,9 @@ function ApplicationDetailModal({
     application.applicationUrl ?? '',
   )
   const [notes, setNotes] = useState(application.notes)
+  const [selectedResumeId, setSelectedResumeId] = useState(
+    application.matchedResumeId ?? '',
+  )
 
   const handleCancelEdit = () => {
     setCompany(application.company)
@@ -41,12 +48,12 @@ function ApplicationDetailModal({
     e.preventDefault()
     if (!company.trim() || !role.trim()) return
 
-    onUpdate(application.id, {
+    const { id, ...rest } = application
+    onUpdate(id, {
+      ...rest,
       company,
       role,
       status,
-      appliedDate: application.appliedDate,
-      matchLevel: application.matchLevel,
       contactEmail: contactEmail.trim() || undefined,
       applicationUrl: applicationUrl.trim() || undefined,
       notes,
@@ -60,6 +67,28 @@ function ApplicationDetailModal({
     )
     if (confirmed) onDelete(application.id)
   }
+
+  const handleRunMatch = () => {
+    const resume = resumes.find((r) => r.id === selectedResumeId)
+    if (!resume || !application.requiredSkills) return
+
+    const result = computeMatch(
+      application.requiredSkills,
+      resume.extractedSkills,
+    )
+
+    const { id, ...rest } = application
+    onUpdate(id, {
+      ...rest,
+      ...result,
+      matchedResumeId: resume.id,
+      matchedDate: new Date().toISOString().split('T')[0],
+    })
+  }
+
+  const matchedResumeName = resumes.find(
+    (resume) => resume.id === application.matchedResumeId,
+  )?.name
 
   return (
     <div
@@ -166,62 +195,139 @@ function ApplicationDetailModal({
               />
             </form>
           ) : (
-            <dl className="space-y-3 text-sm">
-              <div>
-                <dt className="font-semibold text-slate-500">Status</dt>
-                <dd className="text-slate-900">{application.status}</dd>
-              </div>
-              <div>
-                <dt className="font-semibold text-slate-500">Applied date</dt>
-                <dd className="text-slate-900">{application.appliedDate}</dd>
-              </div>
-              {application.matchLevel && (
+            <>
+              <dl className="space-y-3 text-sm">
                 <div>
-                  <dt className="font-semibold text-slate-500">Match level</dt>
-                  <dd className="text-slate-900 capitalize">
-                    {application.matchLevel}
+                  <dt className="font-semibold text-slate-500">Status</dt>
+                  <dd className="text-slate-900">{application.status}</dd>
+                </div>
+                <div>
+                  <dt className="font-semibold text-slate-500">Applied date</dt>
+                  <dd className="text-slate-900">{application.appliedDate}</dd>
+                </div>
+                {application.contactEmail && (
+                  <div>
+                    <dt className="font-semibold text-slate-500">
+                      Contact email
+                    </dt>
+                    <dd>
+                      <a
+                        href={`mailto:${application.contactEmail}`}
+                        className="text-blue-600 hover:underline break-all"
+                      >
+                        {application.contactEmail}
+                      </a>
+                    </dd>
+                  </div>
+                )}
+                {application.applicationUrl && (
+                  <div>
+                    <dt className="font-semibold text-slate-500">
+                      Application link
+                    </dt>
+                    <dd>
+                      <a
+                        href={application.applicationUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline break-all"
+                      >
+                        {application.applicationUrl}
+                      </a>
+                    </dd>
+                  </div>
+                )}
+                <div>
+                  <dt className="font-semibold text-slate-500">Notes</dt>
+                  <dd className="text-slate-900 whitespace-pre-wrap">
+                    {application.notes || 'No notes.'}
                   </dd>
                 </div>
-              )}
-              {application.contactEmail && (
-                <div>
-                  <dt className="font-semibold text-slate-500">
-                    Contact email
-                  </dt>
-                  <dd>
-                    <a
-                      href={`mailto:${application.contactEmail}`}
-                      className="text-blue-600 hover:underline break-all"
-                    >
-                      {application.contactEmail}
-                    </a>
-                  </dd>
-                </div>
-              )}
-              {application.applicationUrl && (
-                <div>
-                  <dt className="font-semibold text-slate-500">
-                    Application link
-                  </dt>
-                  <dd>
-                    <a
-                      href={application.applicationUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline break-all"
-                    >
-                      {application.applicationUrl}
-                    </a>
-                  </dd>
-                </div>
-              )}
-              <div>
-                <dt className="font-semibold text-slate-500">Notes</dt>
-                <dd className="text-slate-900 whitespace-pre-wrap">
-                  {application.notes || 'No notes.'}
-                </dd>
-              </div>
-            </dl>
+              </dl>
+
+              {application.requiredSkills &&
+                application.requiredSkills.length > 0 && (
+                  <div className="mt-5 pt-5 border-t border-slate-200">
+                    <p className="text-sm font-semibold text-slate-500 mb-2">
+                      Match against a resume
+                    </p>
+                    {resumes.length === 0 ? (
+                      <p className="text-sm text-slate-500">
+                        Upload a resume on the Resume Analysis page first.
+                      </p>
+                    ) : (
+                      <>
+                        <div className="flex gap-2 mb-3">
+                          <select
+                            value={selectedResumeId}
+                            onChange={(e) =>
+                              setSelectedResumeId(e.target.value)
+                            }
+                            className="flex-1 p-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-900"
+                          >
+                            <option value="">Choose a resume...</option>
+                            {resumes.map((resume) => (
+                              <option key={resume.id} value={resume.id}>
+                                {resume.name}
+                              </option>
+                            ))}
+                          </select>
+                          <button
+                            type="button"
+                            onClick={handleRunMatch}
+                            disabled={!selectedResumeId}
+                            className="px-4 py-2 bg-violet-600 text-white font-semibold rounded-lg hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            Run Match
+                          </button>
+                        </div>
+
+                        {application.matchLevel &&
+                          application.matchedSkills &&
+                          application.missingSkills && (
+                            <div>
+                              <MatchGauge
+                                level={application.matchLevel}
+                                showLabels
+                              />
+                              {matchedResumeName && (
+                                <p className="text-sm text-slate-500 mt-3 mb-2">
+                                  Matched against: {matchedResumeName}
+                                </p>
+                              )}
+                              <p className="text-sm font-semibold text-slate-500 mb-1 mt-3">
+                                Matched Skills
+                              </p>
+                              <div className="flex flex-wrap gap-2 mb-3">
+                                {application.matchedSkills.map((skill) => (
+                                  <span
+                                    key={skill}
+                                    className="px-3 py-1 bg-green-100 text-green-700 border border-green-200 text-sm font-semibold rounded-full"
+                                  >
+                                    {skill}
+                                  </span>
+                                ))}
+                              </div>
+                              <p className="text-sm font-semibold text-slate-500 mb-1">
+                                Missing Skills
+                              </p>
+                              <div className="flex flex-wrap gap-2">
+                                {application.missingSkills.map((skill) => (
+                                  <span
+                                    key={skill}
+                                    className="px-3 py-1 bg-red-100 text-red-700 border border-red-200 text-sm font-semibold rounded-full"
+                                  >
+                                    {skill}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                      </>
+                    )}
+                  </div>
+                )}
+            </>
           )}
         </div>
 

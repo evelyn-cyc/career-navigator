@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useApplications } from '../hooks/useApplications'
+import { useResumes } from '../hooks/useResumes'
 import ApplicationForm from '../components/ApplicationForm'
 import ApplicationList from '../components/ApplicationList'
 import ApplicationDetailModal from '../components/ApplicationDetailModal'
@@ -13,6 +14,7 @@ function ApplicationsPage() {
     updateApplication,
     deleteApplication,
   } = useApplications()
+  const { resumes } = useResumes()
   const [viewingApplication, setViewingApplication] =
     useState<Application | null>(null)
 
@@ -51,6 +53,7 @@ function ApplicationsPage() {
       {viewingApplication && (
         <ApplicationDetailModal
           application={viewingApplication}
+          resumes={resumes}
           onClose={() => setViewingApplication(null)}
           onUpdate={handleUpdateFromModal}
           onDelete={handleDeleteFromModal}

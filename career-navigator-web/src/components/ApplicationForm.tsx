@@ -7,15 +7,18 @@ type ApplicationFormProps = {
 }
 
 function ApplicationForm({ onAdd }: ApplicationFormProps) {
-  const jobMatchResult = useCareerStore((state) => state.jobMatchResult)
-  const [company, setCompany] = useState(jobMatchResult?.company ?? '')
-  const [role, setRole] = useState(jobMatchResult?.role ?? '')
+  const jobRequirements = useCareerStore((state) => state.jobRequirements)
+  const [company, setCompany] = useState(jobRequirements?.company ?? '')
+  const [role, setRole] = useState(jobRequirements?.role ?? '')
   const [status, setStatus] = useState<ApplicationStatus>('Saved')
   const [contactEmail, setContactEmail] = useState(
-    jobMatchResult?.contactEmail ?? '',
+    jobRequirements?.contactEmail ?? '',
   )
   const [applicationUrl, setApplicationUrl] = useState(
-    jobMatchResult?.applicationUrl ?? '',
+    jobRequirements?.applicationUrl ?? '',
+  )
+  const [requiredSkills, setRequiredSkills] = useState(
+    jobRequirements?.requiredSkills.join(', ') ?? '',
   )
   const [notes, setNotes] = useState('')
 
@@ -23,12 +26,17 @@ function ApplicationForm({ onAdd }: ApplicationFormProps) {
     e.preventDefault()
     if (!company.trim() || !role.trim()) return
 
+    const skillsList = requiredSkills
+      .split(',')
+      .map((skill) => skill.trim())
+      .filter((skill) => skill.length > 0)
+
     onAdd({
       company,
       role,
       status,
       appliedDate: new Date().toISOString().split('T')[0],
-      matchLevel: jobMatchResult?.matchLevel,
+      requiredSkills: skillsList.length > 0 ? skillsList : undefined,
       contactEmail: contactEmail.trim() || undefined,
       applicationUrl: applicationUrl.trim() || undefined,
       notes,
@@ -39,6 +47,7 @@ function ApplicationForm({ onAdd }: ApplicationFormProps) {
     setStatus('Saved')
     setContactEmail('')
     setApplicationUrl('')
+    setRequiredSkills('')
     setNotes('')
   }
 
@@ -113,6 +122,18 @@ function ApplicationForm({ onAdd }: ApplicationFormProps) {
           />
         </div>
       </div>
+      <label className="block text-sm font-semibold text-slate-500 mb-1">
+        Required Skills
+      </label>
+      <input
+        value={requiredSkills}
+        onChange={(e) => setRequiredSkills(e.target.value)}
+        placeholder="React, TypeScript, AWS (comma-separated)"
+        className="w-full p-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-900 mb-1"
+      />
+      <p className="text-xs text-slate-500 mb-3">
+        Lets you match this application against a saved resume later.
+      </p>
       <label className="block text-sm font-semibold text-slate-500 mb-1">
         Notes
       </label>

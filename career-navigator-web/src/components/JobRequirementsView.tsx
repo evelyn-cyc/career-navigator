@@ -1,6 +1,5 @@
 import { useNavigate } from 'react-router-dom'
 import { useCareerStore } from '../store/useCareerStore'
-import MatchGauge from './MatchGauge'
 import type { JobPostingDetails } from '../types'
 
 function JobPostingDetailsGrid({ details }: { details: JobPostingDetails }) {
@@ -52,91 +51,30 @@ function JobPostingDetailsGrid({ details }: { details: JobPostingDetails }) {
   )
 }
 
-function JobMatchResultView() {
-  const jobMatchResult = useCareerStore((state) => state.jobMatchResult)
+function JobRequirementsView() {
   const jobRequirements = useCareerStore((state) => state.jobRequirements)
-  const resumeAnalysis = useCareerStore((state) => state.resumeAnalysis)
   const navigate = useNavigate()
 
-  if (!jobMatchResult && jobRequirements) {
-    return (
-      <div className="p-6 bg-white border border-slate-200 rounded-xl shadow-sm">
-        <h2 className="text-base font-bold text-slate-900 mb-1">
-          Extracted Requirements
-        </h2>
-        <p className="text-sm text-slate-500 mb-4">
-          Upload your resume to see a full match score against these skills.
-        </p>
-
-        <JobPostingDetailsGrid details={jobRequirements} />
-
-        <p className="text-sm font-semibold text-slate-500 mb-1">
-          Required Skills
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {jobRequirements.requiredSkills.map((skill) => (
-            <span
-              key={skill}
-              className="px-3 py-1 bg-violet-100 text-violet-700 border border-violet-200 text-sm font-semibold rounded-full"
-            >
-              {skill}
-            </span>
-          ))}
-        </div>
-      </div>
-    )
-  }
-
-  if (!jobMatchResult || !resumeAnalysis) return null
+  if (!jobRequirements) return null
 
   return (
     <div className="p-6 bg-white border border-slate-200 rounded-xl shadow-sm">
-      <h2 className="text-base font-bold text-slate-900 mb-4">Match Result</h2>
+      <h2 className="text-base font-bold text-slate-900 mb-4">
+        Extracted Requirements
+      </h2>
 
-      <MatchGauge level={jobMatchResult.matchLevel} showLabels />
-
-      <div className="mt-5">
-        <JobPostingDetailsGrid details={jobMatchResult} />
-      </div>
+      <JobPostingDetailsGrid details={jobRequirements} />
 
       <p className="text-sm font-semibold text-slate-500 mb-1">
-        Matched Skills
+        Required Skills
       </p>
       <div className="flex flex-wrap gap-2 mb-4">
-        {jobMatchResult.matchedSkills.map((skill) => (
+        {jobRequirements.requiredSkills.map((skill) => (
           <span
             key={skill}
-            className="px-3 py-1 bg-green-100 text-green-700 border border-green-200 text-sm font-semibold rounded-full"
-          >
-            {skill}
-          </span>
-        ))}
-      </div>
-
-      <p className="text-sm font-semibold text-slate-500 mb-1">
-        Missing Skills
-      </p>
-      <div className="flex flex-wrap gap-2 mb-4">
-        {jobMatchResult.missingSkills.map((skill) => (
-          <span
-            key={skill}
-            className="px-3 py-1 bg-red-100 text-red-700 border border-red-200 text-sm font-semibold rounded-full"
-          >
-            {skill}
-          </span>
-        ))}
-      </div>
-
-      <p className="text-sm font-semibold text-slate-500 mb-1">
-        Suggested Keywords
-      </p>
-      <div className="flex flex-wrap gap-2 mb-4">
-        {jobMatchResult.suggestedKeywords.map((keyword) => (
-          <span
-            key={keyword}
             className="px-3 py-1 bg-violet-100 text-violet-700 border border-violet-200 text-sm font-semibold rounded-full"
           >
-            {keyword}
+            {skill}
           </span>
         ))}
       </div>
@@ -151,4 +89,4 @@ function JobMatchResultView() {
   )
 }
 
-export default JobMatchResultView
+export default JobRequirementsView

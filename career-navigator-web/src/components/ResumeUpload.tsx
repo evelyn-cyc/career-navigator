@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react'
 import { Upload, FileText } from 'lucide-react'
-import { useCareerStore } from '../store/useCareerStore'
 import { mockResumeAnalysis } from '../mocks/mockData'
+import type { ResumeAnalysis } from '../types'
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
 const ALLOWED_EXTENSIONS = ['.pdf', '.docx', '.md']
@@ -11,15 +11,24 @@ function getExtension(filename: string) {
   return dotIndex === -1 ? '' : filename.slice(dotIndex).toLowerCase()
 }
 
-function ResumeUpload() {
+type ResumeUploadProps = {
+  onAdd: (data: Omit<ResumeAnalysis, 'id'>) => void
+}
+
+function ResumeUpload({ onAdd }: ResumeUploadProps) {
+  const [name, setName] = useState('')
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [fileName, setFileName] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
-  const setResumeAnalysis = useCareerStore((state) => state.setResumeAnalysis)
+  const isReady = name.trim().length > 0
 
   const processFile = (file: File) => {
+    if (!isReady) {
+      setError('Give this resume a name first.')
+      return
+    }
     if (!ALLOWED_EXTENSIONS.includes(getExtension(file.name))) {
       setError('Only PDF, DOCX, or Markdown files are supported.')
       return
@@ -33,8 +42,14 @@ function ResumeUpload() {
     setFileName(file.name)
     setIsAnalyzing(true)
     setTimeout(() => {
-      setResumeAnalysis(mockResumeAnalysis)
+      onAdd({
+        name,
+        uploadedDate: new Date().toISOString().split('T')[0],
+        ...mockResumeAnalysis,
+      })
       setIsAnalyzing(false)
+      setName('')
+      setFileName(null)
     }, 800)
   }
 
@@ -52,17 +67,31 @@ function ResumeUpload() {
 
   return (
     <div className="p-6 bg-white border border-slate-200 rounded-xl shadow-sm">
-      <h2 className="text-base font-bold text-slate-900 mb-3">Upload resume</h2>
+      <h2 className="text-base font-bold text-slate-900 mb-3">Add a resume</h2>
+
+      <div className="mb-3">
+        <label className="block text-sm font-semibold text-slate-500 mb-1">
+          Resume name <span className="text-red-500">*</span>
+        </label>
+        <input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="e.g. Frontend resume"
+          className="w-full p-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-900"
+        />
+      </div>
 
       <div
-        onClick={() => inputRef.current?.click()}
+        onClick={() => isReady && inputRef.current?.click()}
         onDragOver={(e) => {
           e.preventDefault()
-          setIsDragging(true)
+          if (isReady) setIsDragging(true)
         }}
         onDragLeave={() => setIsDragging(false)}
         onDrop={handleDrop}
-        className={`min-h-[200px] flex flex-col items-center justify-center text-center rounded-lg border-2 border-dashed cursor-pointer transition ${
+        className={`min-h-[200px] flex flex-col items-center justify-center text-center rounded-lg border-2 border-dashed transition ${
+          isReady ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'
+        } ${
           isDragging
             ? 'border-blue-400 bg-blue-50'
             : 'border-slate-200 bg-slate-50 hover:border-slate-300'

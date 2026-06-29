@@ -10,7 +10,7 @@ import {
 const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/resume', label: 'Resume Analysis', icon: FileText },
-  { to: '/match', label: 'Job Matcher', icon: Target },
+  { to: '/match', label: 'Job Analysis', icon: Target },
   { to: '/applications', label: 'Applications', icon: Briefcase },
 ]
 
