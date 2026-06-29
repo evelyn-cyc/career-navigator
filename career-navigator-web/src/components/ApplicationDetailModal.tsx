@@ -263,7 +263,7 @@ function ApplicationDetailModal({
                             onChange={(e) =>
                               setSelectedResumeId(e.target.value)
                             }
-                            className="flex-1 p-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-900"
+                            className="flex-1 min-w-0 p-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-900 truncate"
                           >
                             <option value="">Choose a resume...</option>
                             {resumes.map((resume) => (

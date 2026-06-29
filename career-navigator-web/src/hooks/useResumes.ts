@@ -29,5 +29,13 @@ export function useResumes() {
     setResumes((prev) => prev.filter((resume) => resume.id !== id))
   }
 
-  return { resumes, addResume, deleteResume }
+  const togglePin = (id: string) => {
+    setResumes((prev) =>
+      prev.map((resume) =>
+        resume.id === id ? { ...resume, pinned: !resume.pinned } : resume,
+      ),
+    )
+  }
+
+  return { resumes, addResume, deleteResume, togglePin }
 }

@@ -4,6 +4,8 @@ export const mockResumeAnalysis: Omit<
   ResumeAnalysis,
   'id' | 'name' | 'uploadedDate'
 > = {
+  overview:
+    'A well-structured resume targeting frontend engineering roles. Strong coverage of the modern React/TypeScript ecosystem with hands-on project experience that meaningfully differentiates it from most student portfolios.',
   extractedSkills: ['React', 'TypeScript', 'JavaScript', 'CSS', 'Git'],
   projects: [
     'Aussie EcoLens - Image classification web app',

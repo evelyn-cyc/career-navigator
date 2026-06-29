@@ -2,6 +2,8 @@ export type ResumeAnalysis = {
   id: string
   name: string
   uploadedDate: string
+  pinned?: boolean
+  overview?: string
   extractedSkills: string[]
   projects: string[]
   experience: string[]

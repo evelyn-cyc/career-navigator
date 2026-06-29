@@ -53,7 +53,10 @@ function ApplicationsPage() {
       {viewingApplication && (
         <ApplicationDetailModal
           application={viewingApplication}
-          resumes={resumes}
+          resumes={[
+            ...resumes.filter((r) => r.pinned),
+            ...resumes.filter((r) => !r.pinned),
+          ]}
           onClose={() => setViewingApplication(null)}
           onUpdate={handleUpdateFromModal}
           onDelete={handleDeleteFromModal}
