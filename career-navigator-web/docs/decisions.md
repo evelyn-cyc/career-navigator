@@ -26,3 +26,9 @@
 **Decision:** Not building a working light/dark theme switch now, even though the mockup shows a theme toggle icon in the sidebar footer.
 **Why:** We just converted every component from dark to light theme this session. A real toggle means going back through all ~10 component/page files again to add Tailwind `dark:` variants for every background/text/border color — comparable in size to the redesign just finished, and not worth doing twice in one session.
 **Follow-up (do in Step 3 — Portfolio Polish):** Add Tailwind's class-based dark mode, a small theme-preference hook (state + `localStorage`, similar pattern to `useApplications`) to toggle a `dark` class on the root element, and `dark:` variants across all components.
+
+## Resume upload UI accepts PDF, DOCX, and Markdown
+
+**Decision:** `ResumeUpload.tsx` now accepts `.pdf`, `.docx`, and `.md` files (validated by filename extension, not `file.type`, since Markdown files don't have a reliable MIME type across browsers).
+**Why:** Better honesty about what the upload box accepts, and Step 1 never actually parses the file content anyway (always returns mock data), so widening accepted formats has no cost now.
+**Follow-up (do in Step 2):** ADR005 currently only commits real parsing to PDF via `pdf-parse`. Need to add DOCX parsing (e.g. `mammoth`) and trivial plain-text reading for Markdown when building the real `/resume/analyze` endpoint, or narrow the upload UI back down if we decide not to support all three for real.

@@ -70,7 +70,7 @@ function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-4 items-start">
         <Dashboard applications={applications} />
 
         <div className="p-6 bg-white border border-slate-200 rounded-xl shadow-sm">

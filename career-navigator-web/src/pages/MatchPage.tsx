@@ -15,7 +15,7 @@ function MatchPage() {
         </p>
       </header>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-4 items-start">
         <JobDescriptionInput />
         <JobMatchResultView />
       </div>

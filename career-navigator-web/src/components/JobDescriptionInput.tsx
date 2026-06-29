@@ -23,7 +23,7 @@ function JobDescriptionInput() {
   return (
     <div className="p-6 bg-white border border-slate-200 rounded-xl shadow-sm">
       <h2 className="text-base font-bold text-slate-900 mb-3">
-        2. Paste a job description
+        Paste a job description
       </h2>
       <textarea
         value={jobText}
