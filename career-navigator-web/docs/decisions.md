@@ -20,3 +20,9 @@
 **Decision:** Installed and configured Prettier inside `career-navigator-web/` only, rather than setting up npm workspaces with shared root-level tooling.
 **Why:** `career-navigator-web` is currently the only real package in this repo. Setting up a monorepo structure (root `package.json` with `workspaces`, shared root configs) before the backend package exists would be premature scaffolding for a folder shape we don't know yet.
 **Follow-up (do this in Step 2):** When the backend (Lambda + TypeScript) folder is created, migrate `.prettierrc`/`.prettierignore` (and likely `eslint.config.js`) to the repo root, add a root `package.json` with a `workspaces` field listing both packages, so formatting/linting config is shared instead of duplicated.
+
+## Light/dark theme toggle deferred to Step 3
+
+**Decision:** Not building a working light/dark theme switch now, even though the mockup shows a theme toggle icon in the sidebar footer.
+**Why:** We just converted every component from dark to light theme this session. A real toggle means going back through all ~10 component/page files again to add Tailwind `dark:` variants for every background/text/border color — comparable in size to the redesign just finished, and not worth doing twice in one session.
+**Follow-up (do in Step 3 — Portfolio Polish):** Add Tailwind's class-based dark mode, a small theme-preference hook (state + `localStorage`, similar pattern to `useApplications`) to toggle a `dark` class on the root element, and `dark:` variants across all components.
