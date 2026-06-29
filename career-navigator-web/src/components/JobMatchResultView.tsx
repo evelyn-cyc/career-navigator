@@ -7,7 +7,7 @@ function JobMatchResultView() {
   if (!jobMatchResult) return null
 
   return (
-    <div className="p-6 bg-white border border-slate-200 rounded-xl shadow-sm mt-4">
+    <div className="p-6 bg-white border border-slate-200 rounded-xl shadow-sm">
       <h2 className="text-base font-bold text-slate-900 mb-4">Match Result</h2>
 
       <MatchGauge level={jobMatchResult.matchLevel} showLabels />

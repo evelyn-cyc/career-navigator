@@ -21,11 +21,11 @@ function ApplicationList({
   onDelete,
 }: ApplicationListProps) {
   if (applications.length === 0) {
-    return <p className="text-slate-500 mt-4">No applications tracked yet.</p>
+    return <p className="text-slate-500">No applications tracked yet.</p>
   }
 
   return (
-    <div className="mt-4 space-y-3">
+    <div className="space-y-3">
       {applications.map((app) => (
         <div
           key={app.id}
