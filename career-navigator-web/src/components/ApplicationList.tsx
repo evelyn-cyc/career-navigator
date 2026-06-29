@@ -29,7 +29,8 @@ function ApplicationList({
       {applications.map((app) => (
         <div
           key={app.id}
-          className="p-4 bg-white border border-slate-200 rounded-xl shadow-sm flex justify-between items-start"
+          onClick={() => onView(app)}
+          className="p-4 bg-white border border-slate-200 rounded-xl shadow-sm flex justify-between items-start cursor-pointer transition hover:border-blue-300 hover:shadow-md"
         >
           <div className="flex-1 min-w-0">
             <p className="text-slate-900 font-bold">
@@ -45,7 +46,7 @@ function ApplicationList({
               </p>
             )}
           </div>
-          <div className="flex flex-col items-end gap-2 shrink-0 ml-3">
+          <div onClick={(e) => e.stopPropagation()} className="shrink-0 ml-3">
             <select
               value={app.status}
               onChange={(e) =>
@@ -60,12 +61,6 @@ function ApplicationList({
               <option value="Offer">Offer</option>
               <option value="Rejected">Rejected</option>
             </select>
-            <button
-              onClick={() => onView(app)}
-              className="text-blue-600 text-sm font-semibold hover:text-blue-700"
-            >
-              View
-            </button>
           </div>
         </div>
       ))}

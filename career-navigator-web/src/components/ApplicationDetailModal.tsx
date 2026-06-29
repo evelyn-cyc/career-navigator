@@ -19,12 +19,20 @@ function ApplicationDetailModal({
   const [company, setCompany] = useState(application.company)
   const [role, setRole] = useState(application.role)
   const [status, setStatus] = useState<ApplicationStatus>(application.status)
+  const [contactEmail, setContactEmail] = useState(
+    application.contactEmail ?? '',
+  )
+  const [applicationUrl, setApplicationUrl] = useState(
+    application.applicationUrl ?? '',
+  )
   const [notes, setNotes] = useState(application.notes)
 
   const handleCancelEdit = () => {
     setCompany(application.company)
     setRole(application.role)
     setStatus(application.status)
+    setContactEmail(application.contactEmail ?? '')
+    setApplicationUrl(application.applicationUrl ?? '')
     setNotes(application.notes)
     setIsEditing(false)
   }
@@ -39,9 +47,18 @@ function ApplicationDetailModal({
       status,
       appliedDate: application.appliedDate,
       matchLevel: application.matchLevel,
+      contactEmail: contactEmail.trim() || undefined,
+      applicationUrl: applicationUrl.trim() || undefined,
       notes,
     })
-    onClose()
+    setIsEditing(false)
+  }
+
+  const handleDelete = () => {
+    const confirmed = window.confirm(
+      `Delete ${application.role} @ ${application.company}? This can't be undone.`,
+    )
+    if (confirmed) onDelete(application.id)
   }
 
   return (
@@ -51,14 +68,21 @@ function ApplicationDetailModal({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md max-h-[85vh] flex flex-col"
+        className="bg-white rounded-xl shadow-lg p-6 w-full max-w-xl max-h-[85vh] flex flex-col"
       >
         <div className="flex justify-between items-start mb-4 shrink-0">
-          <h2 className="text-lg font-bold text-slate-900">
-            {isEditing
-              ? 'Edit application'
-              : `${application.role} @ ${application.company}`}
-          </h2>
+          {isEditing ? (
+            <h2 className="text-lg font-bold text-slate-900">
+              Edit application
+            </h2>
+          ) : (
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">
+                {application.role}
+              </h2>
+              <p className="text-sm text-slate-500">{application.company}</p>
+            </div>
+          )}
           <button
             onClick={onClose}
             className="text-slate-400 hover:text-slate-600"
@@ -107,13 +131,37 @@ function ApplicationDetailModal({
                 <option value="Offer">Offer</option>
                 <option value="Rejected">Rejected</option>
               </select>
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-500 mb-1">
+                    Contact Email
+                  </label>
+                  <input
+                    value={contactEmail}
+                    onChange={(e) => setContactEmail(e.target.value)}
+                    placeholder="careers@company.com"
+                    className="w-full p-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-900"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-500 mb-1">
+                    Application Link
+                  </label>
+                  <input
+                    value={applicationUrl}
+                    onChange={(e) => setApplicationUrl(e.target.value)}
+                    placeholder="https://..."
+                    className="w-full p-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-900"
+                  />
+                </div>
+              </div>
               <label className="block text-sm font-semibold text-slate-500 mb-1">
                 Notes
               </label>
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                rows={4}
+                rows={8}
                 className="w-full p-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-900 mb-1"
               />
             </form>
@@ -132,6 +180,38 @@ function ApplicationDetailModal({
                   <dt className="font-semibold text-slate-500">Match level</dt>
                   <dd className="text-slate-900 capitalize">
                     {application.matchLevel}
+                  </dd>
+                </div>
+              )}
+              {application.contactEmail && (
+                <div>
+                  <dt className="font-semibold text-slate-500">
+                    Contact email
+                  </dt>
+                  <dd>
+                    <a
+                      href={`mailto:${application.contactEmail}`}
+                      className="text-blue-600 hover:underline break-all"
+                    >
+                      {application.contactEmail}
+                    </a>
+                  </dd>
+                </div>
+              )}
+              {application.applicationUrl && (
+                <div>
+                  <dt className="font-semibold text-slate-500">
+                    Application link
+                  </dt>
+                  <dd>
+                    <a
+                      href={application.applicationUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline break-all"
+                    >
+                      {application.applicationUrl}
+                    </a>
                   </dd>
                 </div>
               )}
@@ -170,7 +250,7 @@ function ApplicationDetailModal({
                 Edit
               </button>
               <button
-                onClick={() => onDelete(application.id)}
+                onClick={handleDelete}
                 className="px-4 py-2 bg-red-50 text-red-600 font-semibold rounded-lg hover:bg-red-100"
               >
                 Delete

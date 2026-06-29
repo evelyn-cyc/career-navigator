@@ -7,11 +7,30 @@ export type ResumeAnalysis = {
 
 export type MatchLevel = 'strong' | 'good' | 'moderate' | 'weak' | 'mismatch'
 
-export type JobMatchResult = {
+export type JobPostingDetails = {
+  company?: string
+  role?: string
+  employmentType?: string
+  location?: string
+  workArrangement?: string
+  salaryRange?: string
+  startDate?: string
+  endDate?: string
+  workingHours?: string
+  citizenshipRequirement?: string
+  contactEmail?: string
+  applicationUrl?: string
+}
+
+export type JobMatchResult = JobPostingDetails & {
   matchLevel: MatchLevel
   matchedSkills: string[]
   missingSkills: string[]
   suggestedKeywords: string[]
+}
+
+export type JobRequirements = JobPostingDetails & {
+  requiredSkills: string[]
 }
 
 export type ApplicationStatus =
@@ -29,5 +48,7 @@ export type Application = {
   status: ApplicationStatus
   appliedDate: string
   matchLevel?: MatchLevel
+  contactEmail?: string
+  applicationUrl?: string
   notes: string
 }

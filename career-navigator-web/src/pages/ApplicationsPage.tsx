@@ -16,6 +16,11 @@ function ApplicationsPage() {
   const [viewingApplication, setViewingApplication] =
     useState<Application | null>(null)
 
+  const handleUpdateFromModal = (id: string, data: Omit<Application, 'id'>) => {
+    updateApplication(id, data)
+    setViewingApplication({ id, ...data })
+  }
+
   const handleDeleteFromModal = (id: string) => {
     deleteApplication(id)
     setViewingApplication(null)
@@ -47,7 +52,7 @@ function ApplicationsPage() {
         <ApplicationDetailModal
           application={viewingApplication}
           onClose={() => setViewingApplication(null)}
-          onUpdate={updateApplication}
+          onUpdate={handleUpdateFromModal}
           onDelete={handleDeleteFromModal}
         />
       )}

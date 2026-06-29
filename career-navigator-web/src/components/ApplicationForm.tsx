@@ -7,11 +7,17 @@ type ApplicationFormProps = {
 }
 
 function ApplicationForm({ onAdd }: ApplicationFormProps) {
-  const [company, setCompany] = useState('')
-  const [role, setRole] = useState('')
-  const [status, setStatus] = useState<ApplicationStatus>('Saved')
-  const [notes, setNotes] = useState('')
   const jobMatchResult = useCareerStore((state) => state.jobMatchResult)
+  const [company, setCompany] = useState(jobMatchResult?.company ?? '')
+  const [role, setRole] = useState(jobMatchResult?.role ?? '')
+  const [status, setStatus] = useState<ApplicationStatus>('Saved')
+  const [contactEmail, setContactEmail] = useState(
+    jobMatchResult?.contactEmail ?? '',
+  )
+  const [applicationUrl, setApplicationUrl] = useState(
+    jobMatchResult?.applicationUrl ?? '',
+  )
+  const [notes, setNotes] = useState('')
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -23,12 +29,16 @@ function ApplicationForm({ onAdd }: ApplicationFormProps) {
       status,
       appliedDate: new Date().toISOString().split('T')[0],
       matchLevel: jobMatchResult?.matchLevel,
+      contactEmail: contactEmail.trim() || undefined,
+      applicationUrl: applicationUrl.trim() || undefined,
       notes,
     })
 
     setCompany('')
     setRole('')
     setStatus('Saved')
+    setContactEmail('')
+    setApplicationUrl('')
     setNotes('')
   }
 
@@ -79,6 +89,30 @@ function ApplicationForm({ onAdd }: ApplicationFormProps) {
         <option value="Offer">Offer</option>
         <option value="Rejected">Rejected</option>
       </select>
+      <div className="grid grid-cols-2 gap-3 mb-3">
+        <div>
+          <label className="block text-sm font-semibold text-slate-500 mb-1">
+            Contact Email
+          </label>
+          <input
+            value={contactEmail}
+            onChange={(e) => setContactEmail(e.target.value)}
+            placeholder="careers@company.com"
+            className="w-full p-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-900"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-semibold text-slate-500 mb-1">
+            Application Link
+          </label>
+          <input
+            value={applicationUrl}
+            onChange={(e) => setApplicationUrl(e.target.value)}
+            placeholder="https://..."
+            className="w-full p-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-900"
+          />
+        </div>
+      </div>
       <label className="block text-sm font-semibold text-slate-500 mb-1">
         Notes
       </label>

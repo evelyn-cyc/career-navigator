@@ -1,4 +1,4 @@
-import type { ResumeAnalysis, JobMatchResult } from '../types'
+import type { ResumeAnalysis, JobMatchResult, JobRequirements } from '../types'
 
 export const mockResumeAnalysis: ResumeAnalysis = {
   extractedSkills: ['React', 'TypeScript', 'JavaScript', 'CSS', 'Git'],
@@ -22,4 +22,32 @@ export const mockJobMatchResult: JobMatchResult = {
     'containerization',
     'continuous integration',
   ],
+  company: 'aiDevelop',
+  role: 'Frontend Developer',
+  employmentType: 'Full-time',
+  location: 'Melbourne, VIC',
+  workArrangement: 'Hybrid',
+  salaryRange: '$90,000 - $110,000 AUD',
+  startDate: '2026-08-01',
+  endDate: '2027-08-01',
+  workingHours: '38 hrs/week',
+  citizenshipRequirement: 'Australian citizen or permanent resident required',
+  contactEmail: 'careers@aidevelop.com',
+  applicationUrl: 'https://aidevelop.com/careers/frontend-developer',
+}
+
+export const mockJobRequirements: JobRequirements = {
+  requiredSkills: ['React', 'TypeScript', 'REST APIs', 'Docker', 'AWS'],
+  company: 'aiDevelop',
+  role: 'Frontend Developer',
+  employmentType: 'Full-time',
+  location: 'Melbourne, VIC',
+  workArrangement: 'Hybrid',
+  salaryRange: '$90,000 - $110,000 AUD',
+  startDate: '2026-08-01',
+  endDate: '2027-08-01',
+  workingHours: '38 hrs/week',
+  citizenshipRequirement: 'Australian citizen or permanent resident required',
+  contactEmail: 'careers@aidevelop.com',
+  applicationUrl: 'https://aidevelop.com/careers/frontend-developer',
 }
