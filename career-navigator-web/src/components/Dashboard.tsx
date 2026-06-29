@@ -1,12 +1,3 @@
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts'
 import type { Application, ApplicationStatus } from '../types'
 
 type DashboardProps = {
@@ -28,27 +19,37 @@ function Dashboard({ applications }: DashboardProps) {
     count: applications.filter((app) => app.status === status).length,
   }))
 
+  const maxCount = Math.max(...statusData.map((d) => d.count), 1)
+
   return (
     <div className="p-6 bg-white border border-slate-200 rounded-xl shadow-sm h-full">
-      <h2 className="text-base font-bold text-slate-900 mb-3">
-        Applications by status
-      </h2>
-      <div className="h-64">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={statusData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-            <XAxis dataKey="status" stroke="#64748b" />
-            <YAxis stroke="#64748b" allowDecimals={false} />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: '#ffffff',
-                border: '1px solid #e2e8f0',
-              }}
-              labelStyle={{ color: '#0f172a' }}
-            />
-            <Bar dataKey="count" fill="#2563eb" radius={[4, 4, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-base font-bold text-slate-900">
+          Applications by status
+        </h2>
+        <span className="px-3 py-1 bg-slate-50 border border-slate-200 text-slate-500 text-xs font-bold rounded-full">
+          Tracker summary
+        </span>
+      </div>
+
+      <div className="space-y-3">
+        {statusData.map(({ status, count }) => (
+          <div
+            key={status}
+            className="grid grid-cols-[90px_1fr_28px] items-center gap-3"
+          >
+            <span className="text-sm text-slate-500">{status}</span>
+            <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+              <div
+                className="h-full rounded-full bg-violet-600"
+                style={{ width: `${(count / maxCount) * 100}%` }}
+              />
+            </div>
+            <span className="text-sm font-bold text-slate-900 text-right">
+              {count}
+            </span>
+          </div>
+        ))}
       </div>
     </div>
   )
