@@ -1,8 +1,10 @@
+import { useNavigate } from 'react-router-dom'
 import { useCareerStore } from '../store/useCareerStore'
 import MatchGauge from './MatchGauge'
 
 function JobMatchResultView() {
   const jobMatchResult = useCareerStore((state) => state.jobMatchResult)
+  const navigate = useNavigate()
 
   if (!jobMatchResult) return null
 
@@ -43,7 +45,7 @@ function JobMatchResultView() {
       <p className="text-sm font-semibold text-slate-500 mb-1">
         Suggested Keywords
       </p>
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2 mb-4">
         {jobMatchResult.suggestedKeywords.map((keyword) => (
           <span
             key={keyword}
@@ -53,6 +55,13 @@ function JobMatchResultView() {
           </span>
         ))}
       </div>
+
+      <button
+        onClick={() => navigate('/applications')}
+        className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700"
+      >
+        Save as Application
+      </button>
     </div>
   )
 }

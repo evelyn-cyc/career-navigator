@@ -32,3 +32,9 @@
 **Decision:** `ResumeUpload.tsx` now accepts `.pdf`, `.docx`, and `.md` files (validated by filename extension, not `file.type`, since Markdown files don't have a reliable MIME type across browsers).
 **Why:** Better honesty about what the upload box accepts, and Step 1 never actually parses the file content anyway (always returns mock data), so widening accepted formats has no cost now.
 **Follow-up (do in Step 2):** ADR005 currently only commits real parsing to PDF via `pdf-parse`. Need to add DOCX parsing (e.g. `mammoth`) and trivial plain-text reading for Markdown when building the real `/resume/analyze` endpoint, or narrow the upload UI back down if we decide not to support all three for real.
+
+## Application Tracker gains full edit, a detail view, and a "Save as Application" shortcut
+
+**Decision:** `ApplicationForm` now doubles as an edit form (reused, not a separate component) when triggered from a list item's "Edit" button; `ApplicationList` gained "View" (opens `ApplicationDetailModal`) alongside the existing status dropdown and Delete; `JobMatchResultView` gained a "Save as Application" button that navigates to `/applications`.
+**Why:** The tracker only supported create + status-update + delete — company/role/notes were locked in after creation, and the match result had no path into the tracker besides remembering to switch pages and retype things manually. `matchLevel` already auto-attaches from the shared Zustand store when adding an application, so the new button is mostly a navigation shortcut, not new data-flow logic.
+**Note:** Company/role still must be typed manually even via the new shortcut — the mock JD matching doesn't extract structured company/role data from pasted text, so there's nothing to auto-fill there without real parsing logic.

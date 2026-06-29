@@ -1,10 +1,25 @@
+import { useState } from 'react'
 import { useApplications } from '../hooks/useApplications'
 import ApplicationForm from '../components/ApplicationForm'
 import ApplicationList from '../components/ApplicationList'
+import ApplicationDetailModal from '../components/ApplicationDetailModal'
+import type { Application } from '../types'
 
 function ApplicationsPage() {
-  const { applications, addApplication, updateStatus, deleteApplication } =
-    useApplications()
+  const {
+    applications,
+    addApplication,
+    updateStatus,
+    updateApplication,
+    deleteApplication,
+  } = useApplications()
+  const [viewingApplication, setViewingApplication] =
+    useState<Application | null>(null)
+
+  const handleDeleteFromModal = (id: string) => {
+    deleteApplication(id)
+    setViewingApplication(null)
+  }
 
   return (
     <div>
@@ -24,9 +39,18 @@ function ApplicationsPage() {
         <ApplicationList
           applications={applications}
           onUpdateStatus={updateStatus}
-          onDelete={deleteApplication}
+          onView={setViewingApplication}
         />
       </div>
+
+      {viewingApplication && (
+        <ApplicationDetailModal
+          application={viewingApplication}
+          onClose={() => setViewingApplication(null)}
+          onUpdate={updateApplication}
+          onDelete={handleDeleteFromModal}
+        />
+      )}
     </div>
   )
 }

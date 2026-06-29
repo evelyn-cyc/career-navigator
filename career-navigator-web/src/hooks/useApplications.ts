@@ -32,9 +32,21 @@ export function useApplications() {
     )
   }
 
+  const updateApplication = (id: string, data: Omit<Application, 'id'>) => {
+    setApplications((prev) =>
+      prev.map((app) => (app.id === id ? { ...data, id } : app)),
+    )
+  }
+
   const deleteApplication = (id: string) => {
     setApplications((prev) => prev.filter((app) => app.id !== id))
   }
 
-  return { applications, addApplication, updateStatus, deleteApplication }
+  return {
+    applications,
+    addApplication,
+    updateStatus,
+    updateApplication,
+    deleteApplication,
+  }
 }
