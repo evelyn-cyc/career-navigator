@@ -37,5 +37,30 @@ export function useResumes() {
     )
   }
 
-  return { resumes, addResume, deleteResume, togglePin }
+  const reorderResumes = (sourceId: string, targetId: string) => {
+    setResumes((prev) => {
+      const from = prev.findIndex((r) => r.id === sourceId)
+      const to = prev.findIndex((r) => r.id === targetId)
+      if (from === -1 || to === -1 || from === to) return prev
+      const next = [...prev]
+      const [moved] = next.splice(from, 1)
+      next.splice(to, 0, moved)
+      return next
+    })
+  }
+
+  const renameResume = (id: string, name: string) => {
+    setResumes((prev) =>
+      prev.map((resume) => (resume.id === id ? { ...resume, name } : resume)),
+    )
+  }
+
+  return {
+    resumes,
+    addResume,
+    deleteResume,
+    togglePin,
+    reorderResumes,
+    renameResume,
+  }
 }

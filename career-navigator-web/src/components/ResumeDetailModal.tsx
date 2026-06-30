@@ -8,14 +8,17 @@ type ResumeDetailModalProps = {
   resume: ResumeAnalysis
   onClose: () => void
   onDelete: (id: string) => void
+  onRename: (id: string, name: string) => void
 }
 
 function ResumeDetailModal({
   resume,
   onClose,
   onDelete,
+  onRename,
 }: ResumeDetailModalProps) {
   const [tab, setTab] = useState<Tab>('overview')
+  const [name, setName] = useState(resume.name)
 
   const handleDelete = () => {
     const confirmed = window.confirm(
@@ -36,9 +39,20 @@ function ResumeDetailModal({
         {/* Header */}
         <div className="px-7 pt-7 pb-0 border-b border-slate-200 flex-none">
           <div className="flex items-start justify-between gap-4 mb-1">
-            <h2 className="text-2xl font-bold text-slate-900 min-w-0">
-              {resume.name}
-            </h2>
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              onBlur={() => {
+                const trimmed = name.trim()
+                if (trimmed && trimmed !== resume.name) {
+                  onRename(resume.id, trimmed)
+                } else {
+                  setName(resume.name)
+                }
+              }}
+              title="Click to rename"
+              className="text-2xl font-bold text-slate-900 bg-transparent border-0 border-b-2 border-transparent focus:border-violet-600 outline-none min-w-0 flex-1 py-0.5 transition-colors font-[inherit]"
+            />
             <button
               onClick={onClose}
               className="w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:bg-slate-100 hover:text-slate-700 flex items-center justify-center flex-none"

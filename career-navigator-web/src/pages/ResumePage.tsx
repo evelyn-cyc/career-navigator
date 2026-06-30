@@ -1,24 +1,72 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Plus, Pin, FileText } from 'lucide-react'
 import { useResumes } from '../hooks/useResumes'
 import AddResumeModal from '../components/AddResumeModal'
 import ResumeDetailModal from '../components/ResumeDetailModal'
 import type { ResumeAnalysis } from '../types'
 
+function DragDots() {
+  return (
+    <svg
+      className="absolute bottom-2.5 right-2.5 text-slate-300"
+      width="12"
+      height="16"
+      viewBox="0 0 12 16"
+    >
+      <circle cx="3" cy="2.5" r="1.3" fill="currentColor" />
+      <circle cx="3" cy="8" r="1.3" fill="currentColor" />
+      <circle cx="3" cy="13.5" r="1.3" fill="currentColor" />
+      <circle cx="9" cy="2.5" r="1.3" fill="currentColor" />
+      <circle cx="9" cy="8" r="1.3" fill="currentColor" />
+      <circle cx="9" cy="13.5" r="1.3" fill="currentColor" />
+    </svg>
+  )
+}
+
 function ResumeCard({
   resume,
   onView,
   onTogglePin,
+  onDragStart,
+  onDragEnd,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+  isDragging,
+  isDragOver,
 }: {
   resume: ResumeAnalysis
   onView: (resume: ResumeAnalysis) => void
   onTogglePin: (id: string) => void
+  onDragStart: (id: string) => void
+  onDragEnd: () => void
+  onDragOver: (id: string) => void
+  onDragLeave: () => void
+  onDrop: (id: string) => void
+  isDragging: boolean
+  isDragOver: boolean
 }) {
   return (
     <div
+      draggable
       onClick={() => onView(resume)}
-      className={`bg-white border border-slate-200 rounded-xl p-[18px] cursor-pointer relative transition shadow-sm group hover:shadow-md hover:border-slate-300 ${
+      onDragStart={() => onDragStart(resume.id)}
+      onDragEnd={onDragEnd}
+      onDragOver={(e) => {
+        e.preventDefault()
+        onDragOver(resume.id)
+      }}
+      onDragLeave={onDragLeave}
+      onDrop={(e) => {
+        e.preventDefault()
+        onDrop(resume.id)
+      }}
+      className={`bg-white border border-slate-200 rounded-xl p-[18px] cursor-pointer relative transition shadow-sm group select-none ${
         resume.pinned ? 'border-t-[3px] border-t-violet-600' : ''
+      } ${isDragging ? 'opacity-40 scale-95' : 'hover:shadow-md hover:border-slate-300'} ${
+        isDragOver
+          ? 'border-violet-400 shadow-violet-100 ring-2 ring-violet-100'
+          : ''
       }`}
     >
       <div className="flex items-start justify-between mb-3">
@@ -48,7 +96,7 @@ function ResumeCard({
         Uploaded {resume.uploadedDate}
       </p>
 
-      <div className="flex flex-wrap gap-1.5">
+      <div className="flex flex-wrap gap-1.5 pb-4">
         {resume.extractedSkills.slice(0, 3).map((skill) => (
           <span
             key={skill}
@@ -63,16 +111,28 @@ function ResumeCard({
           </span>
         )}
       </div>
+
+      <DragDots />
     </div>
   )
 }
 
 function ResumePage() {
-  const { resumes, addResume, deleteResume, togglePin } = useResumes()
+  const {
+    resumes,
+    addResume,
+    deleteResume,
+    togglePin,
+    reorderResumes,
+    renameResume,
+  } = useResumes()
   const [isAddOpen, setIsAddOpen] = useState(false)
   const [viewingResume, setViewingResume] = useState<ResumeAnalysis | null>(
     null,
   )
+  const [draggingId, setDraggingId] = useState<string | null>(null)
+  const [dragOverId, setDragOverId] = useState<string | null>(null)
+  const dragSrcRef = useRef<string | null>(null)
 
   const pinned = resumes.filter((r) => r.pinned)
   const unpinned = resumes.filter((r) => !r.pinned)
@@ -81,6 +141,45 @@ function ResumePage() {
     deleteResume(id)
     setViewingResume(null)
   }
+
+  const handleDragStart = (id: string) => {
+    dragSrcRef.current = id
+    setTimeout(() => setDraggingId(id), 0)
+  }
+
+  const handleDragEnd = () => {
+    setDraggingId(null)
+    setDragOverId(null)
+    dragSrcRef.current = null
+  }
+
+  const handleDragOver = (id: string) => {
+    if (dragSrcRef.current && dragSrcRef.current !== id) {
+      setDragOverId(id)
+    }
+  }
+
+  const handleDrop = (targetId: string) => {
+    if (dragSrcRef.current && dragSrcRef.current !== targetId) {
+      reorderResumes(dragSrcRef.current, targetId)
+    }
+    setDraggingId(null)
+    setDragOverId(null)
+    dragSrcRef.current = null
+  }
+
+  const cardProps = (resume: ResumeAnalysis) => ({
+    resume,
+    onView: setViewingResume,
+    onTogglePin: togglePin,
+    onDragStart: handleDragStart,
+    onDragEnd: handleDragEnd,
+    onDragOver: handleDragOver,
+    onDragLeave: () => setDragOverId(null),
+    onDrop: handleDrop,
+    isDragging: draggingId === resume.id,
+    isDragOver: dragOverId === resume.id,
+  })
 
   return (
     <div>
@@ -104,7 +203,6 @@ function ResumePage() {
         </button>
       </header>
 
-      {/* Pinned section */}
       <div className="flex items-center gap-2.5 mb-3.5">
         <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">
           📌 Pinned
@@ -120,17 +218,11 @@ function ResumePage() {
           </p>
         ) : (
           pinned.map((resume) => (
-            <ResumeCard
-              key={resume.id}
-              resume={resume}
-              onView={setViewingResume}
-              onTogglePin={togglePin}
-            />
+            <ResumeCard key={resume.id} {...cardProps(resume)} />
           ))
         )}
       </div>
 
-      {/* All resumes section */}
       <div className="flex items-center gap-2.5 mb-3.5">
         <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">
           All Resumes
@@ -148,12 +240,7 @@ function ResumePage() {
           </p>
         ) : (
           unpinned.map((resume) => (
-            <ResumeCard
-              key={resume.id}
-              resume={resume}
-              onView={setViewingResume}
-              onTogglePin={togglePin}
-            />
+            <ResumeCard key={resume.id} {...cardProps(resume)} />
           ))
         )}
       </div>
@@ -171,6 +258,7 @@ function ResumePage() {
           resume={viewingResume}
           onClose={() => setViewingResume(null)}
           onDelete={handleDelete}
+          onRename={renameResume}
         />
       )}
     </div>
