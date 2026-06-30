@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Briefcase } from 'lucide-react'
 import { useJobs } from '../hooks/useJobs'
+import { useResumes } from '../hooks/useResumes'
 import JobDescriptionInput from '../components/JobDescriptionInput'
 import JobRequirementsView from '../components/JobRequirementsView'
 import JobDetailModal from '../components/JobDetailModal'
@@ -48,8 +49,14 @@ function JobCard({ job, onView }: { job: Job; onView: (job: Job) => void }) {
 }
 
 function MatchPage() {
-  const { jobs, addJob, deleteJob } = useJobs()
+  const { jobs, addJob, updateJob, deleteJob } = useJobs()
+  const { resumes } = useResumes()
   const [viewingJob, setViewingJob] = useState<Job | null>(null)
+
+  const sortedResumes = [
+    ...resumes.filter((r) => r.pinned),
+    ...resumes.filter((r) => !r.pinned),
+  ]
 
   const handleExtract = (requirements: JobRequirements) => {
     addJob({
@@ -102,8 +109,13 @@ function MatchPage() {
       {viewingJob && (
         <JobDetailModal
           job={viewingJob}
+          resumes={sortedResumes}
           onClose={() => setViewingJob(null)}
           onDelete={handleDelete}
+          onUpdate={(id, data) => {
+            updateJob(id, data)
+            setViewingJob((prev) => (prev ? { ...prev, ...data } : prev))
+          }}
         />
       )}
     </div>
