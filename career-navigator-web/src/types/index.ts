@@ -37,6 +37,18 @@ export type JobRequirements = JobPostingDetails & {
   requiredSkills: string[]
 }
 
+export type Job = JobPostingDetails & {
+  id: string
+  savedDate: string
+  requiredSkills: string[]
+  // optional pre-apply match snapshot (set when a resume is attached before applying)
+  attachedResumeId?: string
+  matchLevel?: MatchLevel
+  matchedSkills?: string[]
+  missingSkills?: string[]
+  matchedDate?: string
+}
+
 export type ApplicationStatus =
   | 'Saved'
   | 'Applied'

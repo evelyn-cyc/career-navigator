@@ -1,8 +1,13 @@
 import { useState } from 'react'
 import { useCareerStore } from '../store/useCareerStore'
 import { mockJobRequirements } from '../mocks/mockData'
+import type { JobRequirements } from '../types'
 
-function JobDescriptionInput() {
+type JobDescriptionInputProps = {
+  onExtract?: (requirements: JobRequirements) => void
+}
+
+function JobDescriptionInput({ onExtract }: JobDescriptionInputProps) {
   const [jobText, setJobText] = useState('')
   const [isExtracting, setIsExtracting] = useState(false)
   const setJobRequirements = useCareerStore((state) => state.setJobRequirements)
@@ -13,6 +18,7 @@ function JobDescriptionInput() {
     setIsExtracting(true)
     setTimeout(() => {
       setJobRequirements(mockJobRequirements)
+      onExtract?.(mockJobRequirements)
       setIsExtracting(false)
     }, 800)
   }

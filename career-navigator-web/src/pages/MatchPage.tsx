@@ -1,7 +1,18 @@
+import { useJobs } from '../hooks/useJobs'
 import JobDescriptionInput from '../components/JobDescriptionInput'
 import JobRequirementsView from '../components/JobRequirementsView'
+import type { JobRequirements } from '../types'
 
 function MatchPage() {
+  const { addJob } = useJobs()
+
+  const handleExtract = (requirements: JobRequirements) => {
+    addJob({
+      ...requirements,
+      savedDate: new Date().toISOString().split('T')[0],
+    })
+  }
+
   return (
     <div>
       <header className="mb-6 pb-5 border-b border-slate-200">
@@ -16,7 +27,7 @@ function MatchPage() {
       </header>
 
       <div className="grid grid-cols-2 gap-4 items-start">
-        <JobDescriptionInput />
+        <JobDescriptionInput onExtract={handleExtract} />
         <JobRequirementsView />
       </div>
     </div>
