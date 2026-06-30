@@ -1,11 +1,12 @@
-import { useState } from 'react'
-import { Plus, Briefcase } from 'lucide-react'
+import { useState, useRef } from 'react'
+import { Plus, Briefcase, Pin } from 'lucide-react'
 import { useJobs } from '../hooks/useJobs'
 import { useResumes } from '../hooks/useResumes'
 import AddJobModal from '../components/AddJobModal'
 import JobDetailModal from '../components/JobDetailModal'
 import type { Job, MatchLevel } from '../types'
 
+// ── Match mini gauge ──────────────────────────────────────────────────
 const LEVEL_TEXT: Record<MatchLevel, string> = {
   strong: 'text-violet-600',
   good: 'text-green-700',
@@ -13,7 +14,6 @@ const LEVEL_TEXT: Record<MatchLevel, string> = {
   weak: 'text-orange-500',
   mismatch: 'text-red-600',
 }
-
 const LEVEL_BAR: Record<MatchLevel, string> = {
   strong: 'bg-violet-600',
   good: 'bg-green-700',
@@ -21,7 +21,6 @@ const LEVEL_BAR: Record<MatchLevel, string> = {
   weak: 'bg-orange-500',
   mismatch: 'bg-red-600',
 }
-
 const LEVEL_SEGS: Record<MatchLevel, number> = {
   strong: 5,
   good: 4,
@@ -48,26 +47,96 @@ function MiniGauge({ level }: { level: MatchLevel }) {
   )
 }
 
-function JobCard({ job, onView }: { job: Job; onView: (job: Job) => void }) {
+// ── Drag handle dots ──────────────────────────────────────────────────
+function DragDots() {
+  return (
+    <svg
+      className="absolute bottom-2.5 right-2.5 text-slate-300"
+      width="12"
+      height="16"
+      viewBox="0 0 12 16"
+    >
+      <circle cx="3" cy="2.5" r="1.3" fill="currentColor" />
+      <circle cx="3" cy="8" r="1.3" fill="currentColor" />
+      <circle cx="3" cy="13.5" r="1.3" fill="currentColor" />
+      <circle cx="9" cy="2.5" r="1.3" fill="currentColor" />
+      <circle cx="9" cy="8" r="1.3" fill="currentColor" />
+      <circle cx="9" cy="13.5" r="1.3" fill="currentColor" />
+    </svg>
+  )
+}
+
+// ── Job card ──────────────────────────────────────────────────────────
+function JobCard({
+  job,
+  onView,
+  onTogglePin,
+  onDragStart,
+  onDragEnd,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+  isDragging,
+  isDragOver,
+}: {
+  job: Job
+  onView: (job: Job) => void
+  onTogglePin: (id: string) => void
+  onDragStart: (id: string) => void
+  onDragEnd: () => void
+  onDragOver: (id: string) => void
+  onDragLeave: () => void
+  onDrop: (id: string) => void
+  isDragging: boolean
+  isDragOver: boolean
+}) {
   return (
     <div
+      draggable
       onClick={() => onView(job)}
-      className="bg-white border border-slate-200 rounded-xl p-[18px] cursor-pointer transition shadow-sm hover:shadow-md hover:border-slate-300 flex flex-col"
+      onDragStart={() => onDragStart(job.id)}
+      onDragEnd={onDragEnd}
+      onDragOver={(e) => {
+        e.preventDefault()
+        onDragOver(job.id)
+      }}
+      onDragLeave={onDragLeave}
+      onDrop={(e) => {
+        e.preventDefault()
+        onDrop(job.id)
+      }}
+      className={`bg-white border border-slate-200 rounded-xl p-[18px] cursor-pointer relative transition shadow-sm group select-none flex flex-col ${
+        job.pinned ? 'border-t-[3px] border-t-violet-600' : ''
+      } ${isDragging ? 'opacity-40 scale-95' : 'hover:shadow-md hover:border-slate-300'} ${
+        isDragOver ? 'border-violet-400 ring-2 ring-violet-100' : ''
+      }`}
     >
-      <div className="flex items-start gap-3 mb-3">
+      <div className="flex items-start justify-between mb-3">
         <div className="w-9 h-9 rounded-[6px] bg-violet-50 flex items-center justify-center flex-none">
           <Briefcase size={16} className="text-violet-600" />
         </div>
-        <div className="min-w-0">
-          <p className="text-[13.5px] font-bold text-slate-900 leading-snug line-clamp-1">
-            {job.role ?? 'Unknown Role'}
-          </p>
-          <p className="text-[12px] text-slate-500">
-            {job.company ?? 'Unknown Company'}
-          </p>
+        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              onTogglePin(job.id)
+            }}
+            title={job.pinned ? 'Unpin' : 'Pin'}
+            className={`w-7 h-7 rounded-[6px] flex items-center justify-center hover:bg-slate-100 transition-colors ${
+              job.pinned ? 'text-violet-600' : 'text-slate-400'
+            }`}
+          >
+            <Pin size={13} fill={job.pinned ? 'currentColor' : 'none'} />
+          </button>
         </div>
       </div>
 
+      <p className="text-[13.5px] font-bold text-slate-900 leading-snug line-clamp-1 mb-0.5">
+        {job.role ?? 'Unknown Role'}
+      </p>
+      <p className="text-[12px] text-slate-500 mb-2">
+        {job.company ?? 'Unknown Company'}
+      </p>
       <p className="text-[11px] text-slate-400 mb-2">Saved {job.savedDate}</p>
 
       <div className="flex flex-wrap gap-1.5 mb-3">
@@ -95,15 +164,25 @@ function JobCard({ job, onView }: { job: Job; onView: (job: Job) => void }) {
           </span>
         )}
       </div>
+
+      <DragDots />
     </div>
   )
 }
 
+// ── Page ──────────────────────────────────────────────────────────────
 function MatchPage() {
-  const { jobs, addJob, updateJob, deleteJob } = useJobs()
+  const { jobs, addJob, updateJob, deleteJob, togglePin, reorderJobs } =
+    useJobs()
   const { resumes } = useResumes()
   const [isAddOpen, setIsAddOpen] = useState(false)
   const [viewingJob, setViewingJob] = useState<Job | null>(null)
+  const [draggingId, setDraggingId] = useState<string | null>(null)
+  const [dragOverId, setDragOverId] = useState<string | null>(null)
+  const dragSrcRef = useRef<string | null>(null)
+
+  const pinned = jobs.filter((j) => j.pinned)
+  const unpinned = jobs.filter((j) => !j.pinned)
 
   const sortedResumes = [
     ...resumes.filter((r) => r.pinned),
@@ -114,15 +193,50 @@ function MatchPage() {
     const id = crypto.randomUUID()
     addJob(data, id)
     setIsAddOpen(false)
-    if (openDetail) {
-      setViewingJob({ ...data, id })
-    }
+    if (openDetail) setViewingJob({ ...data, id })
   }
 
   const handleDelete = (id: string) => {
     deleteJob(id)
     setViewingJob(null)
   }
+
+  const handleDragStart = (id: string) => {
+    dragSrcRef.current = id
+    setTimeout(() => setDraggingId(id), 0)
+  }
+
+  const handleDragEnd = () => {
+    setDraggingId(null)
+    setDragOverId(null)
+    dragSrcRef.current = null
+  }
+
+  const handleDragOver = (id: string) => {
+    if (dragSrcRef.current && dragSrcRef.current !== id) setDragOverId(id)
+  }
+
+  const handleDrop = (targetId: string) => {
+    if (dragSrcRef.current && dragSrcRef.current !== targetId) {
+      reorderJobs(dragSrcRef.current, targetId)
+    }
+    setDraggingId(null)
+    setDragOverId(null)
+    dragSrcRef.current = null
+  }
+
+  const cardProps = (job: Job) => ({
+    job,
+    onView: setViewingJob,
+    onTogglePin: togglePin,
+    onDragStart: handleDragStart,
+    onDragEnd: handleDragEnd,
+    onDragOver: handleDragOver,
+    onDragLeave: () => setDragOverId(null),
+    onDrop: handleDrop,
+    isDragging: draggingId === job.id,
+    isDragOver: dragOverId === job.id,
+  })
 
   return (
     <div>
@@ -146,26 +260,45 @@ function MatchPage() {
         </button>
       </header>
 
+      {/* Pinned section */}
       <div className="flex items-center gap-2.5 mb-3.5">
         <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">
-          Saved Jobs
+          📌 Pinned
         </span>
         <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">
-          {jobs.length}
+          {pinned.length}
         </span>
       </div>
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-3.5 mb-9 min-h-[20px]">
+        {pinned.length === 0 ? (
+          <p className="text-sm text-slate-400 italic col-span-full">
+            Nothing pinned yet — hover a card to pin it.
+          </p>
+        ) : (
+          pinned.map((job) => <JobCard key={job.id} {...cardProps(job)} />)
+        )}
+      </div>
 
-      {jobs.length === 0 ? (
-        <p className="text-sm text-slate-400 italic">
-          No jobs saved yet — click Add Job to get started.
-        </p>
-      ) : (
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-3.5">
-          {jobs.map((job) => (
-            <JobCard key={job.id} job={job} onView={setViewingJob} />
-          ))}
-        </div>
-      )}
+      {/* All Jobs section */}
+      <div className="flex items-center gap-2.5 mb-3.5">
+        <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">
+          All Jobs
+        </span>
+        <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">
+          {unpinned.length}
+        </span>
+      </div>
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-3.5 min-h-[20px]">
+        {unpinned.length === 0 ? (
+          <p className="text-sm text-slate-400 italic col-span-full">
+            {jobs.length === 0
+              ? 'No jobs saved yet — click Add Job to get started.'
+              : 'All jobs are pinned.'}
+          </p>
+        ) : (
+          unpinned.map((job) => <JobCard key={job.id} {...cardProps(job)} />)
+        )}
+      </div>
 
       {isAddOpen && (
         <AddJobModal

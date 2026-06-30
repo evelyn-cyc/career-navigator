@@ -37,5 +37,25 @@ export function useJobs() {
     setJobs((prev) => prev.filter((job) => job.id !== id))
   }
 
-  return { jobs, addJob, updateJob, deleteJob }
+  const togglePin = (id: string) => {
+    setJobs((prev) =>
+      prev.map((job) =>
+        job.id === id ? { ...job, pinned: !job.pinned } : job,
+      ),
+    )
+  }
+
+  const reorderJobs = (sourceId: string, targetId: string) => {
+    setJobs((prev) => {
+      const from = prev.findIndex((j) => j.id === sourceId)
+      const to = prev.findIndex((j) => j.id === targetId)
+      if (from === -1 || to === -1 || from === to) return prev
+      const next = [...prev]
+      const [moved] = next.splice(from, 1)
+      next.splice(to, 0, moved)
+      return next
+    })
+  }
+
+  return { jobs, addJob, updateJob, deleteJob, togglePin, reorderJobs }
 }
