@@ -1,6 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
+import { getFile } from '../utils/fileStore'
 import type { ResumeAnalysis } from '../types'
+import type { StoredFile } from '../utils/fileStore'
 
 type Tab = 'overview' | 'skills' | 'projects' | 'suggestions'
 
@@ -19,6 +21,30 @@ function ResumeDetailModal({
 }: ResumeDetailModalProps) {
   const [tab, setTab] = useState<Tab>('overview')
   const [name, setName] = useState(resume.name)
+  const [storedFile, setStoredFile] = useState<StoredFile | null>(null)
+
+  useEffect(() => {
+    getFile(resume.id)
+      .then(setStoredFile)
+      .catch(() => null)
+  }, [resume.id])
+
+  const handlePreview = () => {
+    if (!storedFile) return
+    const url = URL.createObjectURL(storedFile.blob)
+    window.open(url, '_blank')
+    setTimeout(() => URL.revokeObjectURL(url), 10_000)
+  }
+
+  const handleDownload = () => {
+    if (!storedFile) return
+    const url = URL.createObjectURL(storedFile.blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = storedFile.name
+    a.click()
+    URL.revokeObjectURL(url)
+  }
 
   const handleDelete = () => {
     const confirmed = window.confirm(
@@ -188,6 +214,22 @@ function ResumeDetailModal({
           >
             Close
           </button>
+          {storedFile && (
+            <>
+              <button
+                onClick={handlePreview}
+                className="px-4 py-2 bg-white border border-slate-200 text-sm text-slate-700 font-semibold rounded-xl hover:bg-slate-50"
+              >
+                Preview
+              </button>
+              <button
+                onClick={handleDownload}
+                className="px-4 py-2 bg-white border border-slate-200 text-sm text-slate-700 font-semibold rounded-xl hover:bg-slate-50"
+              >
+                Download
+              </button>
+            </>
+          )}
           <button
             onClick={handleDelete}
             className="px-4 py-2 bg-white border border-red-200 text-sm text-red-600 font-semibold rounded-xl hover:bg-red-50 ml-auto"

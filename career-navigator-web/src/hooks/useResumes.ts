@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import type { ResumeAnalysis } from '../types'
+import { deleteFile } from '../utils/fileStore'
 
 const STORAGE_KEY = 'career-navigator-resumes'
 
@@ -20,13 +21,17 @@ export function useResumes() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(resumes))
   }, [resumes])
 
-  const addResume = (data: Omit<ResumeAnalysis, 'id'>) => {
-    const newResume: ResumeAnalysis = { ...data, id: crypto.randomUUID() }
+  const addResume = (data: Omit<ResumeAnalysis, 'id'>, providedId?: string) => {
+    const newResume: ResumeAnalysis = {
+      ...data,
+      id: providedId ?? crypto.randomUUID(),
+    }
     setResumes((prev) => [...prev, newResume])
   }
 
   const deleteResume = (id: string) => {
     setResumes((prev) => prev.filter((resume) => resume.id !== id))
+    deleteFile(id)
   }
 
   const togglePin = (id: string) => {

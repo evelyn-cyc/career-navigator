@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { X, Upload } from 'lucide-react'
 import { mockResumeAnalysis } from '../mocks/mockData'
+import { saveFile } from '../utils/fileStore'
 import type { ResumeAnalysis } from '../types'
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024
@@ -30,7 +31,7 @@ function getExtension(filename: string) {
 
 type AddResumeModalProps = {
   existingNames: string[]
-  onAdd: (data: Omit<ResumeAnalysis, 'id'>) => void
+  onAdd: (data: Omit<ResumeAnalysis, 'id'>, id?: string) => void
   onClose: () => void
 }
 
@@ -40,6 +41,7 @@ export default function AddResumeModal({
   onClose,
 }: AddResumeModalProps) {
   const [panel, setPanel] = useState<Panel>('upload')
+  const [file, setFile] = useState<File | null>(null)
   const [fileName, setFileName] = useState('')
   const [step, setStep] = useState(0)
   const [resumeName, setResumeName] = useState('')
@@ -63,18 +65,19 @@ export default function AddResumeModal({
     return () => clearTimeout(t)
   }, [panel, step])
 
-  const startAnalysis = (file: File) => {
-    if (!ALLOWED_EXTENSIONS.includes(getExtension(file.name))) {
+  const startAnalysis = (uploadedFile: File) => {
+    if (!ALLOWED_EXTENSIONS.includes(getExtension(uploadedFile.name))) {
       setUploadError('Only PDF, DOCX, or Markdown files are supported.')
       return
     }
-    if (file.size > MAX_FILE_SIZE) {
+    if (uploadedFile.size > MAX_FILE_SIZE) {
       setUploadError('File is too large. Max size is 5MB.')
       return
     }
     setUploadError(null)
-    setFileName(file.name)
-    setResumeName(toDisplayName(file.name))
+    setFile(uploadedFile)
+    setFileName(uploadedFile.name)
+    setResumeName(toDisplayName(uploadedFile.name))
     setStep(0)
     setNameError(null)
     setPanel('analyzing')
@@ -95,7 +98,7 @@ export default function AddResumeModal({
     if (file) startAnalysis(file)
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const finalName = resumeName.trim() || toDisplayName(fileName)
     if (
       existingNames.some((n) => n.toLowerCase() === finalName.toLowerCase())
@@ -103,11 +106,16 @@ export default function AddResumeModal({
       setNameError(`"${finalName}" already exists. Choose a different name.`)
       return
     }
-    onAdd({
-      name: finalName,
-      uploadedDate: new Date().toISOString().split('T')[0],
-      ...mockResumeAnalysis,
-    })
+    const id = crypto.randomUUID()
+    if (file) await saveFile(id, file)
+    onAdd(
+      {
+        name: finalName,
+        uploadedDate: new Date().toISOString().split('T')[0],
+        ...mockResumeAnalysis,
+      },
+      id,
+    )
     onClose()
   }
 
