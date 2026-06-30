@@ -118,6 +118,7 @@ function JobDetailModal({
 
   const matches = job.matches ?? []
   const latestMatch = matches.at(-1)
+  const existingRecord = matches.find((m) => m.resumeId === selectedResumeId)
 
   const handleRunMatch = () => {
     const resume = resumes.find((r) => r.id === selectedResumeId)
@@ -238,29 +239,35 @@ function JobDetailModal({
                 </p>
               ) : (
                 <>
-                  <div className="flex gap-2 mb-5">
-                    <select
-                      value={selectedResumeId}
-                      onChange={(e) => setSelectedResumeId(e.target.value)}
-                      className="flex-1 min-w-0 p-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-900 truncate"
-                    >
-                      <option value="">Choose a resume...</option>
-                      {resumes.map((r) => (
-                        <option key={r.id} value={r.id}>
-                          {r.pinned ? '📌 ' : ''}
-                          {r.name}
-                        </option>
-                      ))}
-                    </select>
-                    <button
-                      onClick={handleRunMatch}
-                      disabled={!selectedResumeId}
-                      className="px-4 py-2 bg-violet-600 text-white text-sm font-semibold rounded-lg hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {matches.some((m) => m.resumeId === selectedResumeId)
-                        ? 'Re-run'
-                        : 'Run Match'}
-                    </button>
+                  <div className="mb-4">
+                    <div className="flex gap-2">
+                      <select
+                        value={selectedResumeId}
+                        onChange={(e) => setSelectedResumeId(e.target.value)}
+                        className="flex-1 min-w-0 p-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-900 truncate"
+                      >
+                        <option value="">Choose a resume...</option>
+                        {resumes.map((r) => (
+                          <option key={r.id} value={r.id}>
+                            {r.pinned ? '📌 ' : ''}
+                            {r.name}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={handleRunMatch}
+                        disabled={!selectedResumeId}
+                        className="px-4 py-2 bg-violet-600 text-white text-sm font-semibold rounded-lg hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {existingRecord ? 'Re-run' : 'Run Match'}
+                      </button>
+                    </div>
+                    {existingRecord && (
+                      <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mt-2">
+                        Already matched on {existingRecord.matchedDate} — Re-run
+                        will update the existing result.
+                      </p>
+                    )}
                   </div>
 
                   {matches.length === 0 ? (
