@@ -20,8 +20,8 @@ export function useJobs() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(jobs))
   }, [jobs])
 
-  const addJob = (data: Omit<Job, 'id'>) => {
-    const newJob: Job = { ...data, id: crypto.randomUUID() }
+  const addJob = (data: Omit<Job, 'id'>, providedId?: string) => {
+    const newJob: Job = { ...data, id: providedId ?? crypto.randomUUID() }
     setJobs((prev) => [newJob, ...prev]) // newest first
   }
 
