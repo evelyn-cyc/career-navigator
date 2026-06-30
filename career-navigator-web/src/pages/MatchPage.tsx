@@ -156,11 +156,18 @@ function JobCard({
       </div>
 
       <div className="mt-auto pt-3 border-t border-slate-100">
-        {job.matchLevel ? (
-          <MiniGauge level={job.matchLevel} />
+        {job.matches && job.matches.length > 0 ? (
+          <div className="flex items-center gap-2">
+            <MiniGauge level={job.matches.at(-1)!.matchLevel} />
+            {job.matches.length > 1 && (
+              <span className="text-[10px] text-slate-400">
+                +{job.matches.length - 1} more
+              </span>
+            )}
+          </div>
         ) : (
           <span className="text-[11px] text-slate-400 italic">
-            No resume attached
+            No resume matched
           </span>
         )}
       </div>

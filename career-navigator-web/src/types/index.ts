@@ -37,16 +37,21 @@ export type JobRequirements = JobPostingDetails & {
   requiredSkills: string[]
 }
 
+export type JobMatchRecord = {
+  resumeId: string
+  resumeName: string
+  matchLevel: MatchLevel
+  matchedSkills: string[]
+  missingSkills: string[]
+  matchedDate: string
+}
+
 export type Job = JobPostingDetails & {
   id: string
   savedDate: string
   pinned?: boolean
   requiredSkills: string[]
-  attachedResumeId?: string
-  matchLevel?: MatchLevel
-  matchedSkills?: string[]
-  missingSkills?: string[]
-  matchedDate?: string
+  matches?: JobMatchRecord[]
 }
 
 export type ApplicationStatus =

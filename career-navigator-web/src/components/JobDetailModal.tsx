@@ -2,10 +2,9 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { X } from 'lucide-react'
 import { JobPostingDetailsGrid } from './JobPostingDetailsGrid'
-import MatchGauge from './MatchGauge'
 import { computeMatch } from '../utils/matching'
 import { useCareerStore } from '../store/useCareerStore'
-import type { Job, ResumeAnalysis } from '../types'
+import type { Job, JobMatchRecord, ResumeAnalysis, MatchLevel } from '../types'
 
 type Tab = 'overview' | 'match' | 'suggestions'
 
@@ -15,6 +14,94 @@ type JobDetailModalProps = {
   onClose: () => void
   onDelete: (id: string) => void
   onUpdate: (id: string, data: Partial<Omit<Job, 'id'>>) => void
+}
+
+const LEVEL_TEXT: Record<MatchLevel, string> = {
+  strong: 'text-violet-600',
+  good: 'text-green-700',
+  moderate: 'text-amber-600',
+  weak: 'text-orange-500',
+  mismatch: 'text-red-600',
+}
+const LEVEL_BAR: Record<MatchLevel, string> = {
+  strong: 'bg-violet-600',
+  good: 'bg-green-700',
+  moderate: 'bg-amber-500',
+  weak: 'bg-orange-500',
+  mismatch: 'bg-red-600',
+}
+const LEVEL_SEGS: Record<MatchLevel, number> = {
+  strong: 5,
+  good: 4,
+  moderate: 3,
+  weak: 2,
+  mismatch: 1,
+}
+
+function MiniGaugeBadge({ level }: { level: MatchLevel }) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <span className={`text-[11px] font-bold capitalize ${LEVEL_TEXT[level]}`}>
+        {level}
+      </span>
+      <div className="flex gap-[2px]">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <div
+            key={i}
+            className={`w-2.5 h-1 rounded-sm ${i <= LEVEL_SEGS[level] ? LEVEL_BAR[level] : 'bg-slate-200'}`}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function MatchRecordCard({ record }: { record: JobMatchRecord }) {
+  return (
+    <div className="border border-slate-200 rounded-xl p-4 mb-3">
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <p className="text-sm font-bold text-slate-900 min-w-0 line-clamp-1">
+          {record.resumeName}
+        </p>
+        <div className="flex items-center gap-2 flex-none">
+          <span className="text-[11px] text-slate-400">
+            {record.matchedDate}
+          </span>
+          <MiniGaugeBadge level={record.matchLevel} />
+        </div>
+      </div>
+
+      {record.matchedSkills.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mb-2">
+          {record.matchedSkills.map((s) => (
+            <span
+              key={s}
+              className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200"
+            >
+              {s}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {record.missingSkills.length > 0 ? (
+        <div className="flex flex-wrap gap-1.5">
+          {record.missingSkills.map((s) => (
+            <span
+              key={s}
+              className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-red-100 text-red-700 border border-red-200"
+            >
+              {s}
+            </span>
+          ))}
+        </div>
+      ) : (
+        <p className="text-xs text-slate-400 italic">
+          Full coverage — no missing skills.
+        </p>
+      )}
+    </div>
+  )
 }
 
 function JobDetailModal({
@@ -27,23 +114,27 @@ function JobDetailModal({
   const navigate = useNavigate()
   const setJobRequirements = useCareerStore((state) => state.setJobRequirements)
   const [tab, setTab] = useState<Tab>('overview')
-  const [selectedResumeId, setSelectedResumeId] = useState(
-    job.attachedResumeId ?? '',
-  )
+  const [selectedResumeId, setSelectedResumeId] = useState('')
 
-  const matchedResumeName = resumes.find(
-    (r) => r.id === job.attachedResumeId,
-  )?.name
+  const matches = job.matches ?? []
+  const latestMatch = matches.at(-1)
 
   const handleRunMatch = () => {
     const resume = resumes.find((r) => r.id === selectedResumeId)
     if (!resume) return
     const result = computeMatch(job.requiredSkills, resume.extractedSkills)
-    onUpdate(job.id, {
-      ...result,
-      attachedResumeId: resume.id,
+    const newRecord: JobMatchRecord = {
+      resumeId: resume.id,
+      resumeName: resume.name,
+      matchLevel: result.matchLevel,
+      matchedSkills: result.matchedSkills,
+      missingSkills: result.missingSkills,
       matchedDate: new Date().toISOString().split('T')[0],
-    })
+    }
+    const updatedMatches = matches.some((m) => m.resumeId === resume.id)
+      ? matches.map((m) => (m.resumeId === resume.id ? newRecord : m))
+      : [...matches, newRecord]
+    onUpdate(job.id, { matches: updatedMatches })
   }
 
   const handleTrackJob = () => {
@@ -100,6 +191,11 @@ function JobDetailModal({
                 }`}
               >
                 {t}
+                {t === 'match' && matches.length > 0 && (
+                  <span className="ml-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-violet-100 text-violet-600">
+                    {matches.length}
+                  </span>
+                )}
               </button>
             ))}
           </div>
@@ -142,7 +238,7 @@ function JobDetailModal({
                 </p>
               ) : (
                 <>
-                  <div className="flex gap-2 mb-4">
+                  <div className="flex gap-2 mb-5">
                     <select
                       value={selectedResumeId}
                       onChange={(e) => setSelectedResumeId(e.target.value)}
@@ -161,69 +257,13 @@ function JobDetailModal({
                       disabled={!selectedResumeId}
                       className="px-4 py-2 bg-violet-600 text-white text-sm font-semibold rounded-lg hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {job.attachedResumeId ? 'Re-run' : 'Attach & match'}
+                      {matches.some((m) => m.resumeId === selectedResumeId)
+                        ? 'Re-run'
+                        : 'Run Match'}
                     </button>
                   </div>
 
-                  {job.matchLevel && job.matchedSkills && job.missingSkills ? (
-                    <>
-                      {matchedResumeName && (
-                        <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl px-4 py-2.5 mb-4 text-sm font-semibold text-green-700">
-                          <svg
-                            width="14"
-                            height="14"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2.5"
-                            strokeLinecap="round"
-                          >
-                            <polyline points="20 6 9 17 4 12" />
-                          </svg>
-                          Matched against {matchedResumeName}
-                        </div>
-                      )}
-                      <MatchGauge level={job.matchLevel} showLabels />
-                      <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 mt-5">
-                        Matched Skills
-                      </p>
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {job.matchedSkills.length === 0 ? (
-                          <p className="text-sm text-slate-400 italic">
-                            None matched.
-                          </p>
-                        ) : (
-                          job.matchedSkills.map((s) => (
-                            <span
-                              key={s}
-                              className="px-3 py-1 bg-green-100 text-green-700 border border-green-200 text-sm font-semibold rounded-full"
-                            >
-                              {s}
-                            </span>
-                          ))
-                        )}
-                      </div>
-                      <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">
-                        Missing Skills
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {job.missingSkills.length === 0 ? (
-                          <p className="text-sm text-slate-400 italic">
-                            Nothing missing — full coverage.
-                          </p>
-                        ) : (
-                          job.missingSkills.map((s) => (
-                            <span
-                              key={s}
-                              className="px-3 py-1 bg-red-100 text-red-700 border border-red-200 text-sm font-semibold rounded-full"
-                            >
-                              {s}
-                            </span>
-                          ))
-                        )}
-                      </div>
-                    </>
-                  ) : (
+                  {matches.length === 0 ? (
                     <div className="text-center py-8">
                       <div className="w-12 h-12 rounded-xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
                         <svg
@@ -239,12 +279,24 @@ function JobDetailModal({
                         </svg>
                       </div>
                       <p className="text-sm font-bold text-slate-700 mb-1">
-                        No resume attached yet
+                        No matches yet
                       </p>
                       <p className="text-sm text-slate-400">
-                        Pick a resume above to see how well it matches.
+                        Pick a resume above and run a match to compare.
                       </p>
                     </div>
+                  ) : (
+                    <>
+                      <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">
+                        Match Results ({matches.length})
+                      </p>
+                      {[...matches].reverse().map((record) => (
+                        <MatchRecordCard
+                          key={record.resumeId}
+                          record={record}
+                        />
+                      ))}
+                    </>
                   )}
                 </>
               )}
@@ -254,42 +306,50 @@ function JobDetailModal({
           {/* ── Suggestions ── */}
           {tab === 'suggestions' && (
             <>
-              {!job.attachedResumeId ? (
+              {!latestMatch ? (
                 <p className="text-sm text-slate-500 text-center py-8">
-                  Attach a resume on the Match tab to see suggestions here.
+                  Run a match on the Match tab to see suggestions here.
                 </p>
-              ) : !job.missingSkills || job.missingSkills.length === 0 ? (
+              ) : latestMatch.missingSkills.length === 0 ? (
                 <p className="text-sm text-slate-500 text-center py-8">
                   This resume already covers every required skill for this role.
                 </p>
               ) : (
-                job.missingSkills.map((skill) => (
-                  <div
-                    key={skill}
-                    className="flex gap-2.5 p-3.5 rounded-xl border border-amber-200 bg-amber-50 mb-2.5"
-                  >
-                    <svg
-                      className="text-amber-700 flex-none mt-0.5"
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
+                <>
+                  <p className="text-xs text-slate-400 mb-4">
+                    Based on:{' '}
+                    <span className="font-semibold text-slate-600">
+                      {latestMatch.resumeName}
+                    </span>
+                  </p>
+                  {latestMatch.missingSkills.map((skill) => (
+                    <div
+                      key={skill}
+                      className="flex gap-2.5 p-3.5 rounded-xl border border-amber-200 bg-amber-50 mb-2.5"
                     >
-                      <circle cx="12" cy="12" r="10" />
-                      <line x1="12" y1="8" x2="12" y2="12" />
-                      <circle cx="12" cy="16" r="0.5" fill="currentColor" />
-                    </svg>
-                    <p className="text-sm text-slate-700 leading-relaxed">
-                      This role lists{' '}
-                      <strong className="text-slate-900">{skill}</strong>, which
-                      isn't showing up on the attached resume — if a recent
-                      project used it, consider adding a line about it.
-                    </p>
-                  </div>
-                ))
+                      <svg
+                        className="text-amber-700 flex-none mt-0.5"
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      >
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="8" x2="12" y2="12" />
+                        <circle cx="12" cy="16" r="0.5" fill="currentColor" />
+                      </svg>
+                      <p className="text-sm text-slate-700 leading-relaxed">
+                        This role lists{' '}
+                        <strong className="text-slate-900">{skill}</strong>,
+                        which isn't showing up on the attached resume — if a
+                        recent project used it, consider adding a line about it.
+                      </p>
+                    </div>
+                  ))}
+                </>
               )}
             </>
           )}
