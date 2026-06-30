@@ -116,10 +116,13 @@ export default function AddResumeModal({
       onClick={onClose}
       className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-8 z-50"
     >
-      <div onClick={(e) => e.stopPropagation()}>
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-[640px]"
+      >
         {/* ── Panel A: Upload ── */}
         {panel === 'upload' && (
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-[520px] p-9">
+          <div className="bg-white rounded-2xl shadow-2xl w-full p-9">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-slate-900">Add a resume</h2>
               <button
@@ -175,14 +178,14 @@ export default function AddResumeModal({
 
         {/* ── Panel B: Analyzing ── */}
         {panel === 'analyzing' && (
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-[440px] p-11 text-center">
+          <div className="bg-white rounded-2xl shadow-2xl w-full p-11 text-center">
             <div className="w-12 h-12 border-[3px] border-violet-100 border-t-violet-600 rounded-full animate-spin mx-auto mb-6" />
             <h3 className="text-lg font-bold text-slate-900 mb-1">
               Analysing your resume
             </h3>
             <p className="text-sm text-slate-500 mb-7">{fileName}</p>
 
-            <div className="text-left flex flex-col gap-3.5">
+            <div className="text-left flex flex-col gap-3.5 w-full max-w-xs mx-auto">
               {STEPS.map((label, i) => {
                 const done = i < step
                 const active = i === step
@@ -230,7 +233,7 @@ export default function AddResumeModal({
 
         {/* ── Panel C: Results ── */}
         {panel === 'result' && (
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-[680px] max-h-[84vh] flex flex-col overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-2xl w-full h-[82vh] flex flex-col overflow-hidden">
             <div className="px-7 pt-7 pb-0 border-b border-slate-200 flex-none">
               <div className="flex items-start gap-4 mb-1">
                 <input
