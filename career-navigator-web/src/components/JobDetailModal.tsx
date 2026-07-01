@@ -167,6 +167,17 @@ function JobDetailModal({
   const [draggingId, setDraggingId] = useState<string | null>(null)
   const [dragOverId, setDragOverId] = useState<string | null>(null)
   const dragSrcRef = useRef<string | null>(null)
+  const bodyRef = useRef<HTMLDivElement>(null)
+
+  const handleScrollOnDrag = (e: React.DragEvent<HTMLDivElement>) => {
+    const el = bodyRef.current
+    if (!el || !dragSrcRef.current) return
+    const { top, bottom } = el.getBoundingClientRect()
+    const threshold = 60
+    const speed = 8
+    if (e.clientY < top + threshold) el.scrollTop -= speed
+    else if (e.clientY > bottom - threshold) el.scrollTop += speed
+  }
 
   const matches = job.matches ?? []
   const latestMatch = matches.at(-1)
@@ -290,7 +301,11 @@ function JobDetailModal({
         </div>
 
         {/* Body */}
-        <div className="overflow-y-auto flex-1 px-7 py-6">
+        <div
+          ref={bodyRef}
+          onDragOver={handleScrollOnDrag}
+          className="overflow-y-auto flex-1 px-7 py-6"
+        >
           {/* ── Overview ── */}
           {tab === 'overview' && (
             <>
