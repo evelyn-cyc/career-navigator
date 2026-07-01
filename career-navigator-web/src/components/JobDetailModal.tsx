@@ -223,12 +223,21 @@ function JobDetailModal({
     const srcId = dragSrcRef.current
     if (srcId && srcId !== targetId) {
       const from = matches.findIndex((m) => m.resumeId === srcId)
-      const to = matches.findIndex((m) => m.resumeId === targetId)
-      if (from !== -1 && to !== -1) {
-        const next = [...matches]
-        const [moved] = next.splice(from, 1)
-        next.splice(to, 0, moved)
-        onUpdate(job.id, { matches: next })
+      if (targetId === '__end__') {
+        if (from !== -1) {
+          const next = [...matches]
+          const [moved] = next.splice(from, 1)
+          next.push(moved)
+          onUpdate(job.id, { matches: next })
+        }
+      } else {
+        const to = matches.findIndex((m) => m.resumeId === targetId)
+        if (from !== -1 && to !== -1) {
+          const next = [...matches]
+          const [moved] = next.splice(from, 1)
+          next.splice(to, 0, moved)
+          onUpdate(job.id, { matches: next })
+        }
       }
     }
     setDraggingId(null)
@@ -406,6 +415,25 @@ function JobDetailModal({
                           isDragOver={dragOverId === record.resumeId}
                         />
                       ))}
+                      {/* End-of-list drop zone */}
+                      <div
+                        onDragOver={(e) => {
+                          e.preventDefault()
+                          if (dragSrcRef.current) setDragOverId('__end__')
+                        }}
+                        onDragLeave={() => setDragOverId(null)}
+                        onDrop={(e) => {
+                          e.preventDefault()
+                          handleDrop('__end__')
+                        }}
+                        className={`h-10 rounded-xl border-2 border-dashed transition ${
+                          dragOverId === '__end__'
+                            ? 'border-violet-400 bg-violet-50'
+                            : draggingId
+                              ? 'border-slate-200'
+                              : 'border-transparent'
+                        }`}
+                      />
                     </>
                   )}
                 </>
