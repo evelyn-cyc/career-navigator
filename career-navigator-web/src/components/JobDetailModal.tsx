@@ -123,6 +123,12 @@ function JobDetailModal({
   const handleRunMatch = () => {
     const resume = resumes.find((r) => r.id === selectedResumeId)
     if (!resume) return
+    if (existingRecord) {
+      const confirmed = window.confirm(
+        `"${resume.name}" was already matched on ${existingRecord.matchedDate}. Re-run will replace the existing result — continue?`,
+      )
+      if (!confirmed) return
+    }
     const result = computeMatch(job.requiredSkills, resume.extractedSkills)
     const newRecord: JobMatchRecord = {
       resumeId: resume.id,
@@ -262,12 +268,6 @@ function JobDetailModal({
                         {existingRecord ? 'Re-run' : 'Run Match'}
                       </button>
                     </div>
-                    {existingRecord && (
-                      <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mt-2">
-                        Already matched on {existingRecord.matchedDate} — Re-run
-                        will update the existing result.
-                      </p>
-                    )}
                   </div>
 
                   {matches.length === 0 ? (
