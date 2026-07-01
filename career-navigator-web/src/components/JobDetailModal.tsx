@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { X } from 'lucide-react'
 import { JobPostingDetailsGrid } from './JobPostingDetailsGrid'
@@ -56,9 +56,43 @@ function MiniGaugeBadge({ level }: { level: MatchLevel }) {
   )
 }
 
-function MatchRecordCard({ record }: { record: JobMatchRecord }) {
+function MatchRecordCard({
+  record,
+  onDragStart,
+  onDragEnd,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+  isDragging,
+  isDragOver,
+}: {
+  record: JobMatchRecord
+  onDragStart: (id: string) => void
+  onDragEnd: () => void
+  onDragOver: (id: string) => void
+  onDragLeave: () => void
+  onDrop: (id: string) => void
+  isDragging: boolean
+  isDragOver: boolean
+}) {
   return (
-    <div className="border border-slate-200 rounded-xl p-4 mb-3">
+    <div
+      draggable
+      onDragStart={() => onDragStart(record.resumeId)}
+      onDragEnd={onDragEnd}
+      onDragOver={(e) => {
+        e.preventDefault()
+        onDragOver(record.resumeId)
+      }}
+      onDragLeave={onDragLeave}
+      onDrop={(e) => {
+        e.preventDefault()
+        onDrop(record.resumeId)
+      }}
+      className={`border border-slate-200 rounded-xl p-4 mb-3 relative select-none transition ${
+        isDragging ? 'opacity-40 scale-[0.98]' : ''
+      } ${isDragOver ? 'border-violet-400 ring-2 ring-violet-100' : ''}`}
+    >
       <div className="flex items-start justify-between gap-3 mb-3">
         <p className="text-sm font-bold text-slate-900 min-w-0 line-clamp-1">
           {record.resumeName}
@@ -85,7 +119,7 @@ function MatchRecordCard({ record }: { record: JobMatchRecord }) {
       )}
 
       {record.missingSkills.length > 0 ? (
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-1.5 pb-4">
           {record.missingSkills.map((s) => (
             <span
               key={s}
@@ -96,10 +130,25 @@ function MatchRecordCard({ record }: { record: JobMatchRecord }) {
           ))}
         </div>
       ) : (
-        <p className="text-xs text-slate-400 italic">
+        <p className="text-xs text-slate-400 italic pb-4">
           Full coverage — no missing skills.
         </p>
       )}
+
+      {/* Drag handle */}
+      <svg
+        className="absolute bottom-2.5 right-2.5 text-slate-300"
+        width="12"
+        height="16"
+        viewBox="0 0 12 16"
+      >
+        <circle cx="3" cy="2.5" r="1.3" fill="currentColor" />
+        <circle cx="3" cy="8" r="1.3" fill="currentColor" />
+        <circle cx="3" cy="13.5" r="1.3" fill="currentColor" />
+        <circle cx="9" cy="2.5" r="1.3" fill="currentColor" />
+        <circle cx="9" cy="8" r="1.3" fill="currentColor" />
+        <circle cx="9" cy="13.5" r="1.3" fill="currentColor" />
+      </svg>
     </div>
   )
 }
@@ -115,6 +164,9 @@ function JobDetailModal({
   const setJobRequirements = useCareerStore((state) => state.setJobRequirements)
   const [tab, setTab] = useState<Tab>('overview')
   const [selectedResumeId, setSelectedResumeId] = useState('')
+  const [draggingId, setDraggingId] = useState<string | null>(null)
+  const [dragOverId, setDragOverId] = useState<string | null>(null)
+  const dragSrcRef = useRef<string | null>(null)
 
   const matches = job.matches ?? []
   const latestMatch = matches.at(-1)
@@ -142,6 +194,35 @@ function JobDetailModal({
       ? matches.map((m) => (m.resumeId === resume.id ? newRecord : m))
       : [...matches, newRecord]
     onUpdate(job.id, { matches: updatedMatches })
+  }
+
+  const handleDragStart = (id: string) => {
+    dragSrcRef.current = id
+    setTimeout(() => setDraggingId(id), 0)
+  }
+  const handleDragEnd = () => {
+    setDraggingId(null)
+    setDragOverId(null)
+    dragSrcRef.current = null
+  }
+  const handleDragOver = (id: string) => {
+    if (dragSrcRef.current && dragSrcRef.current !== id) setDragOverId(id)
+  }
+  const handleDrop = (targetId: string) => {
+    const srcId = dragSrcRef.current
+    if (srcId && srcId !== targetId) {
+      const from = matches.findIndex((m) => m.resumeId === srcId)
+      const to = matches.findIndex((m) => m.resumeId === targetId)
+      if (from !== -1 && to !== -1) {
+        const next = [...matches]
+        const [moved] = next.splice(from, 1)
+        next.splice(to, 0, moved)
+        onUpdate(job.id, { matches: next })
+      }
+    }
+    setDraggingId(null)
+    setDragOverId(null)
+    dragSrcRef.current = null
   }
 
   const handleTrackJob = () => {
@@ -297,10 +378,17 @@ function JobDetailModal({
                       <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">
                         Match Results ({matches.length})
                       </p>
-                      {[...matches].reverse().map((record) => (
+                      {matches.map((record) => (
                         <MatchRecordCard
                           key={record.resumeId}
                           record={record}
+                          onDragStart={handleDragStart}
+                          onDragEnd={handleDragEnd}
+                          onDragOver={handleDragOver}
+                          onDragLeave={() => setDragOverId(null)}
+                          onDrop={handleDrop}
+                          isDragging={draggingId === record.resumeId}
+                          isDragOver={dragOverId === record.resumeId}
                         />
                       ))}
                     </>
