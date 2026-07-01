@@ -56,24 +56,58 @@ function MiniGaugeBadge({ level }: { level: MatchLevel }) {
   )
 }
 
+function InsertionSlot({
+  slotIndex,
+  activeSlot,
+  onActivate,
+  onDeactivate,
+  onDrop,
+}: {
+  slotIndex: number
+  activeSlot: number | null
+  onActivate: (i: number) => void
+  onDeactivate: () => void
+  onDrop: (i: number) => void
+}) {
+  const isActive = activeSlot === slotIndex
+  return (
+    <div
+      onDragOver={(e) => {
+        e.preventDefault()
+        onActivate(slotIndex)
+      }}
+      onDragLeave={onDeactivate}
+      onDrop={(e) => {
+        e.preventDefault()
+        onDrop(slotIndex)
+      }}
+      className="py-1.5"
+    >
+      <div
+        className={`h-0.5 rounded-full transition-colors ${isActive ? 'bg-violet-400' : 'bg-transparent'}`}
+      />
+    </div>
+  )
+}
+
 function MatchRecordCard({
   record,
+  index,
   onDragStart,
   onDragEnd,
-  onDragOver,
+  onSlotActivate,
   onDragLeave,
-  onDrop,
+  onDropAtSlot,
   isDragging,
-  isDragOver,
 }: {
   record: JobMatchRecord
+  index: number
   onDragStart: (id: string) => void
   onDragEnd: () => void
-  onDragOver: (id: string) => void
+  onSlotActivate: (slotIndex: number) => void
   onDragLeave: () => void
-  onDrop: (id: string) => void
+  onDropAtSlot: (slotIndex: number) => void
   isDragging: boolean
-  isDragOver: boolean
 }) {
   return (
     <div
@@ -82,16 +116,20 @@ function MatchRecordCard({
       onDragEnd={onDragEnd}
       onDragOver={(e) => {
         e.preventDefault()
-        onDragOver(record.resumeId)
+        const rect = e.currentTarget.getBoundingClientRect()
+        onSlotActivate(
+          e.clientY < rect.top + rect.height / 2 ? index : index + 1,
+        )
       }}
       onDragLeave={onDragLeave}
       onDrop={(e) => {
         e.preventDefault()
-        onDrop(record.resumeId)
+        const rect = e.currentTarget.getBoundingClientRect()
+        onDropAtSlot(e.clientY < rect.top + rect.height / 2 ? index : index + 1)
       }}
-      className={`border border-slate-200 rounded-xl p-4 mb-3 relative select-none transition ${
+      className={`border border-slate-200 rounded-xl p-4 relative select-none transition ${
         isDragging ? 'opacity-40 scale-[0.98]' : ''
-      } ${isDragOver ? 'border-violet-400 ring-2 ring-violet-100' : ''}`}
+      }`}
     >
       <div className="flex items-start justify-between gap-3 mb-3">
         <p className="text-sm font-bold text-slate-900 min-w-0 line-clamp-1">
@@ -165,7 +203,7 @@ function JobDetailModal({
   const [tab, setTab] = useState<Tab>('overview')
   const [selectedResumeId, setSelectedResumeId] = useState('')
   const [draggingId, setDraggingId] = useState<string | null>(null)
-  const [dragOverId, setDragOverId] = useState<string | null>(null)
+  const [activeSlot, setActiveSlot] = useState<number | null>(null)
   const dragSrcRef = useRef<string | null>(null)
   const bodyRef = useRef<HTMLDivElement>(null)
 
@@ -213,35 +251,26 @@ function JobDetailModal({
   }
   const handleDragEnd = () => {
     setDraggingId(null)
-    setDragOverId(null)
+    setActiveSlot(null)
     dragSrcRef.current = null
   }
-  const handleDragOver = (id: string) => {
-    if (dragSrcRef.current && dragSrcRef.current !== id) setDragOverId(id)
-  }
-  const handleDrop = (targetId: string) => {
+  const handleDropAtSlot = (insertAtIndex: number) => {
     const srcId = dragSrcRef.current
-    if (srcId && srcId !== targetId) {
+    if (srcId) {
       const from = matches.findIndex((m) => m.resumeId === srcId)
-      if (targetId === '__end__') {
-        if (from !== -1) {
-          const next = [...matches]
-          const [moved] = next.splice(from, 1)
-          next.push(moved)
-          onUpdate(job.id, { matches: next })
-        }
-      } else {
-        const to = matches.findIndex((m) => m.resumeId === targetId)
-        if (from !== -1 && to !== -1) {
-          const next = [...matches]
-          const [moved] = next.splice(from, 1)
-          next.splice(to, 0, moved)
+      if (from !== -1) {
+        const next = [...matches]
+        const [moved] = next.splice(from, 1)
+        const adjusted =
+          insertAtIndex > from ? insertAtIndex - 1 : insertAtIndex
+        if (from !== adjusted) {
+          next.splice(adjusted, 0, moved)
           onUpdate(job.id, { matches: next })
         }
       }
     }
     setDraggingId(null)
-    setDragOverId(null)
+    setActiveSlot(null)
     dragSrcRef.current = null
   }
 
@@ -402,37 +431,33 @@ function JobDetailModal({
                       <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">
                         Match Results ({matches.length})
                       </p>
-                      {matches.map((record) => (
-                        <MatchRecordCard
-                          key={record.resumeId}
-                          record={record}
-                          onDragStart={handleDragStart}
-                          onDragEnd={handleDragEnd}
-                          onDragOver={handleDragOver}
-                          onDragLeave={() => setDragOverId(null)}
-                          onDrop={handleDrop}
-                          isDragging={draggingId === record.resumeId}
-                          isDragOver={dragOverId === record.resumeId}
-                        />
+                      {matches.map((record, index) => (
+                        <div key={record.resumeId}>
+                          <InsertionSlot
+                            slotIndex={index}
+                            activeSlot={activeSlot}
+                            onActivate={setActiveSlot}
+                            onDeactivate={() => setActiveSlot(null)}
+                            onDrop={handleDropAtSlot}
+                          />
+                          <MatchRecordCard
+                            record={record}
+                            index={index}
+                            onDragStart={handleDragStart}
+                            onDragEnd={handleDragEnd}
+                            onSlotActivate={setActiveSlot}
+                            onDragLeave={() => setActiveSlot(null)}
+                            onDropAtSlot={handleDropAtSlot}
+                            isDragging={draggingId === record.resumeId}
+                          />
+                        </div>
                       ))}
-                      {/* End-of-list drop zone */}
-                      <div
-                        onDragOver={(e) => {
-                          e.preventDefault()
-                          if (dragSrcRef.current) setDragOverId('__end__')
-                        }}
-                        onDragLeave={() => setDragOverId(null)}
-                        onDrop={(e) => {
-                          e.preventDefault()
-                          handleDrop('__end__')
-                        }}
-                        className={`h-10 rounded-xl border-2 border-dashed transition ${
-                          dragOverId === '__end__'
-                            ? 'border-violet-400 bg-violet-50'
-                            : draggingId
-                              ? 'border-slate-200'
-                              : 'border-transparent'
-                        }`}
+                      <InsertionSlot
+                        slotIndex={matches.length}
+                        activeSlot={activeSlot}
+                        onActivate={setActiveSlot}
+                        onDeactivate={() => setActiveSlot(null)}
+                        onDrop={handleDropAtSlot}
                       />
                     </>
                   )}
