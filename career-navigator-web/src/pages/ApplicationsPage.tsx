@@ -1,31 +1,28 @@
 import { useState } from 'react'
-import { useApplications } from '../hooks/useApplications'
+import { useJobs } from '../hooks/useJobs'
 import { useResumes } from '../hooks/useResumes'
-import ApplicationForm from '../components/ApplicationForm'
 import ApplicationList from '../components/ApplicationList'
-import ApplicationDetailModal from '../components/ApplicationDetailModal'
-import type { Application } from '../types'
+import JobDetailModal from '../components/JobDetailModal'
 
 function ApplicationsPage() {
-  const {
-    applications,
-    addApplication,
-    updateStatus,
-    updateApplication,
-    deleteApplication,
-  } = useApplications()
+  const { jobs, updateJob, deleteJob, addAttempt, updateAttempt, deleteAttempt } =
+    useJobs()
   const { resumes } = useResumes()
-  const [viewingApplication, setViewingApplication] =
-    useState<Application | null>(null)
+  const [viewingJobId, setViewingJobId] = useState<string | null>(null)
 
-  const handleUpdateFromModal = (id: string, data: Omit<Application, 'id'>) => {
-    updateApplication(id, data)
-    setViewingApplication({ id, ...data })
-  }
+  const trackedJobs = jobs.filter(
+    (job) => (job.applications ?? []).length > 0,
+  )
+  const viewingJob = jobs.find((j) => j.id === viewingJobId) ?? null
 
-  const handleDeleteFromModal = (id: string) => {
-    deleteApplication(id)
-    setViewingApplication(null)
+  const sortedResumes = [
+    ...resumes.filter((r) => r.pinned),
+    ...resumes.filter((r) => !r.pinned),
+  ]
+
+  const handleDelete = (id: string) => {
+    deleteJob(id)
+    setViewingJobId(null)
   }
 
   return (
@@ -36,30 +33,26 @@ function ApplicationsPage() {
         </p>
         <h1 className="text-2xl font-bold text-slate-900">Applications</h1>
         <p className="text-slate-500 mt-2 max-w-xl">
-          Add new applications and keep notes on every stage, from saved through
-          offer.
+          Every job you've applied to. Click one to change its stage or add
+          notes — to track a new job, head to the Job Library.
         </p>
       </header>
 
-      <div className="grid grid-cols-2 gap-4 items-start">
-        <ApplicationForm onAdd={addApplication} />
-        <ApplicationList
-          applications={applications}
-          onUpdateStatus={updateStatus}
-          onView={setViewingApplication}
-        />
-      </div>
+      <ApplicationList
+        jobs={trackedJobs}
+        onView={(job) => setViewingJobId(job.id)}
+      />
 
-      {viewingApplication && (
-        <ApplicationDetailModal
-          application={viewingApplication}
-          resumes={[
-            ...resumes.filter((r) => r.pinned),
-            ...resumes.filter((r) => !r.pinned),
-          ]}
-          onClose={() => setViewingApplication(null)}
-          onUpdate={handleUpdateFromModal}
-          onDelete={handleDeleteFromModal}
+      {viewingJob && (
+        <JobDetailModal
+          job={viewingJob}
+          resumes={sortedResumes}
+          onClose={() => setViewingJobId(null)}
+          onDelete={handleDelete}
+          onUpdate={updateJob}
+          onAddAttempt={addAttempt}
+          onUpdateAttempt={updateAttempt}
+          onDeleteAttempt={deleteAttempt}
         />
       )}
     </div>

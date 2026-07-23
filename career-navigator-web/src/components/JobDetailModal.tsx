@@ -1,12 +1,17 @@
 import { useState, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { X } from 'lucide-react'
+import { X, Trash2 } from 'lucide-react'
 import { JobPostingDetailsGrid } from './JobPostingDetailsGrid'
 import { computeMatch } from '../utils/matching'
-import { useCareerStore } from '../store/useCareerStore'
-import type { Job, JobMatchRecord, ResumeAnalysis, MatchLevel } from '../types'
+import type {
+  Job,
+  JobMatchRecord,
+  ResumeAnalysis,
+  MatchLevel,
+  ApplicationAttempt,
+  ApplicationStatus,
+} from '../types'
 
-type Tab = 'overview' | 'match' | 'suggestions'
+type Tab = 'overview' | 'match' | 'suggestions' | 'tracking'
 
 type JobDetailModalProps = {
   job: Job
@@ -14,6 +19,13 @@ type JobDetailModalProps = {
   onClose: () => void
   onDelete: (id: string) => void
   onUpdate: (id: string, data: Partial<Omit<Job, 'id'>>) => void
+  onAddAttempt: (jobId: string, data: Omit<ApplicationAttempt, 'attemptId'>) => void
+  onUpdateAttempt: (
+    jobId: string,
+    attemptId: string,
+    data: Partial<Omit<ApplicationAttempt, 'attemptId'>>,
+  ) => void
+  onDeleteAttempt: (jobId: string, attemptId: string) => void
 }
 
 const LEVEL_TEXT: Record<MatchLevel, string> = {
@@ -191,15 +203,67 @@ function MatchRecordCard({
   )
 }
 
+function AttemptCard({
+  attempt,
+  onUpdate,
+  onDelete,
+}: {
+  attempt: ApplicationAttempt
+  onUpdate: (data: Partial<Omit<ApplicationAttempt, 'attemptId'>>) => void
+  onDelete: () => void
+}) {
+  return (
+    <div className="border border-slate-200 rounded-xl p-4 mb-3">
+      <div className="flex items-center justify-between gap-3 mb-3">
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] text-slate-400">
+            {attempt.appliedDate}
+          </span>
+          {attempt.matchLevel && <MiniGaugeBadge level={attempt.matchLevel} />}
+        </div>
+        <div className="flex items-center gap-2">
+          <select
+            value={attempt.status}
+            onChange={(e) =>
+              onUpdate({ status: e.target.value as ApplicationStatus })
+            }
+            className="px-2 py-1 rounded-full border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-700"
+          >
+            <option value="Applied">Applied</option>
+            <option value="Interviewing">Interviewing</option>
+            <option value="Offer">Offer</option>
+            <option value="Rejected">Rejected</option>
+          </select>
+          <button
+            onClick={onDelete}
+            title="Delete attempt"
+            className="w-6 h-6 rounded-md flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50"
+          >
+            <Trash2 size={13} />
+          </button>
+        </div>
+      </div>
+      <textarea
+        value={attempt.notes ?? ''}
+        onChange={(e) => onUpdate({ notes: e.target.value })}
+        placeholder="Notes for this attempt..."
+        rows={2}
+        className="w-full p-2 rounded-lg border border-slate-200 bg-slate-50 text-sm text-slate-900"
+      />
+    </div>
+  )
+}
+
 function JobDetailModal({
   job,
   resumes,
   onClose,
   onDelete,
   onUpdate,
+  onAddAttempt,
+  onUpdateAttempt,
+  onDeleteAttempt,
 }: JobDetailModalProps) {
-  const navigate = useNavigate()
-  const setJobRequirements = useCareerStore((state) => state.setJobRequirements)
   const [tab, setTab] = useState<Tab>('overview')
   const [selectedResumeId, setSelectedResumeId] = useState('')
   const [draggingId, setDraggingId] = useState<string | null>(null)
@@ -220,6 +284,7 @@ function JobDetailModal({
   const matches = job.matches ?? []
   const latestMatch = matches.at(-1)
   const existingRecord = matches.find((m) => m.resumeId === selectedResumeId)
+  const attempts = job.applications ?? []
 
   const handleRunMatch = () => {
     const resume = resumes.find((r) => r.id === selectedResumeId)
@@ -274,10 +339,18 @@ function JobDetailModal({
     dragSrcRef.current = null
   }
 
-  const handleTrackJob = () => {
-    setJobRequirements(job)
-    onClose()
-    navigate('/applications')
+  const handleAddAttempt = () => {
+    onAddAttempt(job.id, {
+      status: 'Applied',
+      appliedDate: new Date().toISOString().split('T')[0],
+      matchLevel: latestMatch?.matchLevel,
+    })
+  }
+
+  const handleDeleteAttempt = (attemptId: string) => {
+    if (window.confirm("Delete this attempt? This can't be undone.")) {
+      onDeleteAttempt(job.id, attemptId)
+    }
   }
 
   const handleDelete = () => {
@@ -317,24 +390,31 @@ function JobDetailModal({
           <p className="text-xs text-slate-400 mb-4">Saved {job.savedDate}</p>
 
           <div className="flex">
-            {(['overview', 'match', 'suggestions'] as Tab[]).map((t) => (
-              <button
-                key={t}
-                onClick={() => setTab(t)}
-                className={`px-4 py-2.5 text-sm font-semibold capitalize border-b-2 -mb-px transition-colors ${
-                  tab === t
-                    ? 'text-violet-600 border-violet-600'
-                    : 'text-slate-500 border-transparent hover:text-slate-800'
-                }`}
-              >
-                {t}
-                {t === 'match' && matches.length > 0 && (
-                  <span className="ml-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-violet-100 text-violet-600">
-                    {matches.length}
-                  </span>
-                )}
-              </button>
-            ))}
+            {(['overview', 'match', 'suggestions', 'tracking'] as Tab[]).map(
+              (t) => (
+                <button
+                  key={t}
+                  onClick={() => setTab(t)}
+                  className={`px-4 py-2.5 text-sm font-semibold capitalize border-b-2 -mb-px transition-colors ${
+                    tab === t
+                      ? 'text-violet-600 border-violet-600'
+                      : 'text-slate-500 border-transparent hover:text-slate-800'
+                  }`}
+                >
+                  {t}
+                  {t === 'match' && matches.length > 0 && (
+                    <span className="ml-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-violet-100 text-violet-600">
+                      {matches.length}
+                    </span>
+                  )}
+                  {t === 'tracking' && attempts.length > 0 && (
+                    <span className="ml-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-600">
+                      {attempts.length}
+                    </span>
+                  )}
+                </button>
+              ),
+            )}
           </div>
         </div>
 
@@ -516,6 +596,35 @@ function JobDetailModal({
               )}
             </>
           )}
+
+          {/* ── Tracking ── */}
+          {tab === 'tracking' && (
+            <>
+              <button
+                onClick={handleAddAttempt}
+                className="mb-4 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700"
+              >
+                + Log new attempt
+              </button>
+
+              {attempts.length === 0 ? (
+                <p className="text-sm text-slate-500 text-center py-8">
+                  Not applied yet — log an attempt to start tracking.
+                </p>
+              ) : (
+                attempts.map((attempt) => (
+                  <AttemptCard
+                    key={attempt.attemptId}
+                    attempt={attempt}
+                    onUpdate={(data) =>
+                      onUpdateAttempt(job.id, attempt.attemptId, data)
+                    }
+                    onDelete={() => handleDeleteAttempt(attempt.attemptId)}
+                  />
+                ))
+              )}
+            </>
+          )}
         </div>
 
         {/* Footer */}
@@ -525,12 +634,6 @@ function JobDetailModal({
             className="px-4 py-2 bg-white border border-slate-200 text-sm text-slate-700 font-semibold rounded-xl hover:bg-slate-50"
           >
             Close
-          </button>
-          <button
-            onClick={handleTrackJob}
-            className="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700"
-          >
-            Track as Application
           </button>
           <button
             onClick={handleDelete}

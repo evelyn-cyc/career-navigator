@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import type { Job } from '../types'
+import type { Job, ApplicationAttempt } from '../types'
 
 const STORAGE_KEY = 'career-navigator-jobs'
 
@@ -57,5 +57,50 @@ export function useJobs() {
     })
   }
 
-  return { jobs, addJob, updateJob, deleteJob, togglePin, reorderJobs }
+  const addAttempt = (jobId: string, data: Omit<ApplicationAttempt, 'attemptId'>) => {
+    const newAttempt: ApplicationAttempt = { ...data, attemptId: crypto.randomUUID() }
+    setJobs((prev) =>
+      prev.map((job) =>
+        job.id === jobId
+          ? { ...job, applications: [...(job.applications ?? []), newAttempt] }
+          : job,
+      ),
+    )
+  }
+  
+  const updateAttempt = (
+    jobId: string,
+    attemptId: string,
+    data: Partial<Omit<ApplicationAttempt, 'attemptId'>>,
+  ) => {
+    setJobs((prev) =>
+      prev.map((job) =>
+        job.id === jobId
+          ? {
+              ...job,
+              applications: (job.applications ?? []).map((attempt) =>
+                attempt.attemptId === attemptId ? { ...attempt, ...data } : attempt,
+              ),
+            }
+          : job,
+      ),
+    )
+  }
+  
+  const deleteAttempt = (jobId: string, attemptId: string) => {
+    setJobs((prev) =>
+      prev.map((job) =>
+        job.id === jobId
+          ? {
+              ...job,
+              applications: (job.applications ?? []).filter(
+                (attempt) => attempt.attemptId !== attemptId,
+              ),
+            }
+          : job,
+      ),
+    )
+  }  
+
+  return { jobs, addJob, updateJob, deleteJob, togglePin, reorderJobs, addAttempt, updateAttempt, deleteAttempt }
 }

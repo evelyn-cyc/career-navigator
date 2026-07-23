@@ -179,15 +179,26 @@ function JobCard({
 
 // ── Page ──────────────────────────────────────────────────────────────
 function MatchPage() {
-  const { jobs, addJob, updateJob, deleteJob, togglePin, reorderJobs } =
-    useJobs()
+  const {
+    jobs,
+    addJob,
+    updateJob,
+    deleteJob,
+    togglePin,
+    reorderJobs,
+    addAttempt,
+    updateAttempt,
+    deleteAttempt,
+  } = useJobs()  
   const { resumes } = useResumes()
   const [isAddOpen, setIsAddOpen] = useState(false)
-  const [viewingJob, setViewingJob] = useState<Job | null>(null)
+  const [viewingJobId, setViewingJobId] = useState<string | null>(null)
   const [draggingId, setDraggingId] = useState<string | null>(null)
   const [dragOverId, setDragOverId] = useState<string | null>(null)
   const dragSrcRef = useRef<string | null>(null)
-
+  
+  const viewingJob = jobs.find((j) => j.id === viewingJobId) ?? null
+  
   const pinned = jobs.filter((j) => j.pinned)
   const unpinned = jobs.filter((j) => !j.pinned)
 
@@ -200,12 +211,12 @@ function MatchPage() {
     const id = crypto.randomUUID()
     addJob(data, id)
     setIsAddOpen(false)
-    if (openDetail) setViewingJob({ ...data, id })
+    if (openDetail) setViewingJobId(id)
   }
 
   const handleDelete = (id: string) => {
     deleteJob(id)
-    setViewingJob(null)
+    setViewingJobId(null)
   }
 
   const handleDragStart = (id: string) => {
@@ -234,7 +245,7 @@ function MatchPage() {
 
   const cardProps = (job: Job) => ({
     job,
-    onView: setViewingJob,
+    onView: (job: Job) => setViewingJobId(job.id),
     onTogglePin: togglePin,
     onDragStart: handleDragStart,
     onDragEnd: handleDragEnd,
@@ -318,12 +329,12 @@ function MatchPage() {
         <JobDetailModal
           job={viewingJob}
           resumes={sortedResumes}
-          onClose={() => setViewingJob(null)}
+          onClose={() => setViewingJobId(null)}
           onDelete={handleDelete}
-          onUpdate={(id, data) => {
-            updateJob(id, data)
-            setViewingJob((prev) => (prev ? { ...prev, ...data } : prev))
-          }}
+          onUpdate={updateJob}
+          onAddAttempt={addAttempt}
+          onUpdateAttempt={updateAttempt}
+          onDeleteAttempt={deleteAttempt}
         />
       )}
     </div>

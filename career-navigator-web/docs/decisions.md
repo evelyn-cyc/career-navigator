@@ -62,3 +62,29 @@
 **Why:** The user pointed out directly that "paste a JD" and "track an application" had converged on the same shape of data — both produce company/role/skills/contact info. Untangling extraction (a JD property) from matching (a comparison that needs _a_ resume, and now _which_ resume) is more honest about what each page actually does, and multiple resumes is a real need once you're tailoring applications to different kinds of roles.
 
 **Bonus — first real (non-mocked) logic:** matching now compares two concrete skill lists — `application.requiredSkills` (from JD extraction) against a selected resume's `extractedSkills` — instead of always returning the same canned `mockJobMatchResult`. `src/utils/matching.ts`'s `computeMatch()` does a real case-insensitive set-overlap with simple ratio thresholds for `matchLevel`. Dropped `suggestedKeywords` from the result entirely — there was no honest computed equivalent for it without real AI, and it was always decorative mock filler.
+
+**Superseded by:** the entry below — `Application` as a standalone, field-duplicating entity is retired in favor of attempts nested on `Job`.
+
+## Application is retired as a top-level entity; applications become attempts nested on Job
+
+**Decision:** `Application` (with its own duplicated `company`/`role`/`requiredSkills` etc., inherited from `JobPostingDetails`) is removed. In its place, `Job` gains `applications: ApplicationAttempt[]`, parallel to its existing `matches: JobMatchRecord[]`:
+
+```typescript
+type ApplicationAttempt = {
+  attemptId: string
+  status: 'Applied' | 'Interviewing' | 'Offer' | 'Rejected'
+  appliedDate: string
+  matchLevel?: MatchLevel // frozen at attempt time
+  notes?: string
+}
+```
+
+`company`, `role`, and `requiredSkills` now live on `Job` only — never duplicated per attempt. The Applications page becomes a derived view (`jobs.filter(j => j.applications.length > 0)`), not its own CRUD store.
+
+**Why field ownership split the way it did:**
+
+- **Shared, not duplicated — `company` / `role` / `requiredSkills`:** These describe the job posting itself. The user owns and edits their own Job data directly — it isn't pulled live from an external source that could drift underneath them — so editing a Job's fields retroactively applying to all its attempts is the correct behavior, not a data-integrity risk. This retires the "Fat Application" shape from the previous entry, where these fields were copied onto every `Application` at creation time and could silently go stale relative to the `Job` they came from.
+- **Still frozen per attempt — `matchLevel`:** This is the one field where the old snapshot reasoning still holds. The same `Job` can be matched against different resume versions over time (`matches: JobMatchRecord[]` already supports this), so a match result has to stay pinned to the attempt it was relevant to — overwriting it with a later, unrelated match would misrepresent what the user actually knew when they applied.
+- **Per-attempt, not per-job — `notes`:** Feedback and context from one application round (e.g. interviewer notes, rejection reason) shouldn't bleed into a later reapply to the same job. Each attempt keeps its own notes.
+
+**Also decided:** reapplying to the same job after rejection is a real, supported scenario — hence `applications` is an array (multiple attempts per job), not a single optional object.

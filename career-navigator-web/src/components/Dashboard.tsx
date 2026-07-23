@@ -1,22 +1,20 @@
-import type { Application, ApplicationStatus } from '../types'
+import type { ApplicationAttempt, ApplicationStatus } from '../types'
 
 type DashboardProps = {
-  applications: Application[]
+  attempts: ApplicationAttempt[]
 }
 
 const allStatuses: ApplicationStatus[] = [
-  'Saved',
   'Applied',
-  'OA',
-  'Interview',
+  'Interviewing',
   'Offer',
   'Rejected',
 ]
 
-function Dashboard({ applications }: DashboardProps) {
+function Dashboard({ attempts }: DashboardProps) {
   const statusData = allStatuses.map((status) => ({
     status,
-    count: applications.filter((app) => app.status === status).length,
+    count: attempts.filter((attempt) => attempt.status === status).length,
   }))
 
   const maxCount = Math.max(...statusData.map((d) => d.count), 1)

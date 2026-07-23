@@ -46,33 +46,25 @@ export type JobMatchRecord = {
   matchedDate: string
 }
 
+export type ApplicationStatus =
+  | 'Applied'
+  | 'Interviewing'
+  | 'Offer'
+  | 'Rejected'
+
+export type ApplicationAttempt = {
+  attemptId: string
+  status: ApplicationStatus
+  appliedDate: string
+  matchLevel?: MatchLevel // frozen at attempt time — see decisions.md
+  notes?: string
+}
+
 export type Job = JobPostingDetails & {
   id: string
   savedDate: string
   pinned?: boolean
   requiredSkills: string[]
   matches?: JobMatchRecord[]
-}
-
-export type ApplicationStatus =
-  | 'Saved'
-  | 'Applied'
-  | 'OA'
-  | 'Interview'
-  | 'Offer'
-  | 'Rejected'
-
-export type Application = JobPostingDetails & {
-  id: string
-  company: string
-  role: string
-  status: ApplicationStatus
-  appliedDate: string
-  requiredSkills?: string[]
-  matchedResumeId?: string
-  matchedDate?: string
-  matchLevel?: MatchLevel
-  matchedSkills?: string[]
-  missingSkills?: string[]
-  notes: string
+  applications?: ApplicationAttempt[]
 }
